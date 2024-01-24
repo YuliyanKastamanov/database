@@ -1,10 +1,9 @@
 package databaseApp.db.service.impl;
 
-import databaseApp.db.model.entity.Role;
+import databaseApp.db.model.entity.RoleEntity;
 import databaseApp.db.model.entity.enums.RoleEnum;
 import databaseApp.db.repository.RoleRepository;
 import databaseApp.db.service.RoleService;
-import jdk.jfr.Category;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -26,11 +25,19 @@ public class RoleServiceImpl implements RoleService {
         if (roleRepository.count() == 0){
             Arrays.stream(RoleEnum.values())
                     .forEach(roleEnum -> {
-                        Role role = new Role();
-                        role.setRole(roleEnum);
-                        roleRepository.save(role);
+                        RoleEntity roleEntity = new RoleEntity();
+                        roleEntity.setRole(roleEnum);
+                        roleRepository.save(roleEntity);
                     });
         }
 
     }
+
+    @Override
+    public RoleEntity findByName(RoleEnum role) {
+        return roleRepository.findByRole(role)
+                .orElse(null);
+    }
+
+
 }

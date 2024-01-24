@@ -20,7 +20,7 @@ public abstract class BaseTask extends BaseEntity {
     @Column(name = "comment", nullable = false)
     private String comment;
     @ManyToOne
-    private User jce;
+    private UserEntity jce;
     @Column(name = "coversheet_sap")
     private String coversheetSap;
     @Column(name = "coversheet_status")
@@ -83,11 +83,11 @@ public abstract class BaseTask extends BaseEntity {
         this.comment = comment;
     }
 
-    public User getJce() {
+    public UserEntity getJce() {
         return jce;
     }
 
-    public void setJce(User jce) {
+    public void setJce(UserEntity jce) {
         this.jce = jce;
     }
 

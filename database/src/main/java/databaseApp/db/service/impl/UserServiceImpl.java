@@ -1,12 +1,17 @@
 package databaseApp.db.service.impl;
 
 import databaseApp.db.model.dto.UserSignupDTO;
-import databaseApp.db.model.entity.Role;
-import databaseApp.db.model.entity.User;
+import databaseApp.db.model.entity.RoleEntity;
+import databaseApp.db.model.entity.UserEntity;
 import databaseApp.db.repository.UserRepository;
+import databaseApp.db.service.RoleService;
 import databaseApp.db.service.UserService;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -15,16 +20,22 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper) {
+    private final RoleService roleService;
+
+    private PasswordEncoder passwordEncoder;
+
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
+        this.roleService = roleService;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
     @Override
-    public boolean existByUNumber(String s) {
+    public boolean existByUNumber(String uNumber) {
 
-        if(userRepository.findByuNumber(s)){
+        if(userRepository.findByuNumber(uNumber).isPresent()){
             return true;
         }
         return false;
@@ -32,7 +43,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean existsByEmail(String email) {
-        if(userRepository.findByEmail(email)){
+        if(userRepository.findByEmail(email).isPresent()){
             return true;
         }
         return false;
@@ -46,9 +57,12 @@ public class UserServiceImpl implements UserService {
             return false;
         }
 
-        User user = modelMapper.map(userSignupDTO, User.class);
-
-        user.setRole(userRepository.findByRoleEnum(userSignupDTO.getRoleEnum()));
+        UserEntity user = modelMapper.map(userSignupDTO, UserEntity.class);
+        user.setPassword(passwordEncoder.encode(userSignupDTO.getPassword()));
+        RoleEntity role = roleService.findByName(userSignupDTO.getRole());
+        List<RoleEntity> roles = new ArrayList<>();
+        roles.add(role);
+        user.setRoles(roles);
 
         this.userRepository.save(user);
         return true;

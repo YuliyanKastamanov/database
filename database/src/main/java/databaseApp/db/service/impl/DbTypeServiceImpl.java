@@ -1,9 +1,7 @@
 package databaseApp.db.service.impl;
 
 import databaseApp.db.model.entity.DbType;
-import databaseApp.db.model.entity.Role;
 import databaseApp.db.model.entity.enums.DbTypeEnum;
-import databaseApp.db.model.entity.enums.RoleEnum;
 import databaseApp.db.repository.DbTypeRepository;
 import databaseApp.db.service.DbTypeService;
 import org.springframework.stereotype.Service;

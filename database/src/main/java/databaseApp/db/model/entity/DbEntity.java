@@ -1,18 +1,17 @@
 package databaseApp.db.model.entity;
 
-import databaseApp.db.model.entity.enums.DbTypeEnum;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "db")
-public class Db extends BaseTask {
+public class DbEntity extends BaseTask {
 
 
 
     @ManyToOne
     private DbType dbType;
 
-    public Db() {
+    public DbEntity() {
     }
 
     public DbType getDbType() {

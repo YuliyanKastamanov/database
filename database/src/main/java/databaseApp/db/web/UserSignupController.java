@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin("*")
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/users/signup")
 public class UserSignupController {
 
     private final UserService userService;
@@ -18,26 +18,19 @@ public class UserSignupController {
     }
 
 
-    @GetMapping("/")
-    public String message() {
-        return "---------Hello Spring Boot App------------";
-    }
 
-    @PostMapping("/signup")
+    @PostMapping
     public ResponseEntity<?> registerUser(@RequestBody UserSignupDTO userSignupDTO) {
-
-
-
 
         //check if UNumber already exist
         if (userService.existByUNumber(userSignupDTO.getuNumber())) {
-            return new ResponseEntity<>("Username is already exist!", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Username already exist!", HttpStatus.BAD_REQUEST);
         }
 
 
         //check if email already exist
         if(userService.existsByEmail(userSignupDTO.getEmail())) {
-            return new ResponseEntity<>("Email is already exist!", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Email already exist!", HttpStatus.BAD_REQUEST);
 
         }
 

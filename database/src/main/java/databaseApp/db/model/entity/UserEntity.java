@@ -1,15 +1,14 @@
 package databaseApp.db.model.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Entity
 @Table(name = "users")
-public class User extends BaseEntity {
+public class UserEntity extends BaseEntity {
 
 
     @Column(name = "u_number", unique = true, nullable = false)
@@ -22,10 +21,15 @@ public class User extends BaseEntity {
     @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @ManyToOne
-    private Role role;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "users_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<RoleEntity> roles = new ArrayList<>();
 
-    public User() {
+    public UserEntity() {
     }
 
 
@@ -61,11 +65,13 @@ public class User extends BaseEntity {
         this.email = email;
     }
 
-    public Role getRole() {
-        return role;
+    public List<RoleEntity> getRoles() {
+        return roles;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRoles(List<RoleEntity> roles) {
+        this.roles = roles;
     }
+
+
 }

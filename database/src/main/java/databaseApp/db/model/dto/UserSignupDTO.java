@@ -29,7 +29,7 @@ public class UserSignupDTO {
     @NotBlank
     private String email;
 
-    private RoleEnum roleEnum;
+    private RoleEnum role;
 
     public UserSignupDTO() {
     }
@@ -74,11 +74,11 @@ public class UserSignupDTO {
         this.email = email;
     }
 
-    public RoleEnum getRoleEnum() {
-        return roleEnum;
+    public RoleEnum getRole() {
+        return role;
     }
 
-    public void setRoleEnum(RoleEnum roleEnum) {
-        this.roleEnum = roleEnum;
+    public void setRole(RoleEnum role) {
+        this.role = role;
     }
 }

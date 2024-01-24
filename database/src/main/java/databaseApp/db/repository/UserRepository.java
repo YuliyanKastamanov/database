@@ -1,20 +1,21 @@
 package databaseApp.db.repository;
 
-import databaseApp.db.model.entity.Role;
-import databaseApp.db.model.entity.User;
+import databaseApp.db.model.entity.RoleEntity;
+import databaseApp.db.model.entity.UserEntity;
 import databaseApp.db.model.entity.enums.RoleEnum;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
-public interface UserRepository extends JpaRepository<User, String> {
+public interface UserRepository extends JpaRepository<UserEntity, String> {
 
 
 
-    boolean findByuNumber(String s);
+    Optional<UserEntity> findByuNumber(String uNumber);
 
-    boolean findByEmail(String email);
+    Optional<UserEntity> findByEmail(String email);
 
-    Role findByRoleEnum(RoleEnum roleEnum);
+    //RoleEntity findByRole(RoleEnum roleEnum);
 }
