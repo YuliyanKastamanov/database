@@ -21,6 +21,7 @@ public class UserEntity extends BaseEntity {
     @Column(name = "email", unique = true, nullable = false)
     private String email;
 
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
@@ -72,6 +73,5 @@ public class UserEntity extends BaseEntity {
     public void setRoles(List<RoleEntity> roles) {
         this.roles = roles;
     }
-
 
 }

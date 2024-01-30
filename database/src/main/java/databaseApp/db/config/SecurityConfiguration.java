@@ -1,30 +1,31 @@
 package databaseApp.db.config;
 
-import databaseApp.db.model.entity.RoleEntity;
 import databaseApp.db.model.entity.enums.RoleEnum;
 import databaseApp.db.repository.UserRepository;
 import databaseApp.db.service.impl.DbUserDetailsService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfiguration {
 
-    private final String rememberMeKey;
+/*    private final String rememberMeKey;
 
     public SecurityConfiguration(@Value("${databaseApp.remember.me.key}") String rememberMeKey) {
         this.rememberMeKey = rememberMeKey;
-    }
+    }*/
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
@@ -35,7 +36,7 @@ public class SecurityConfiguration {
                                 //all static resources are situated in (folders name) are available for anyone
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                                 //Allow anyone to see the home page and login page and signup page
-                                .requestMatchers("/", "/users/login", "/users/signup", "/users/login-error").permitAll()
+                                .requestMatchers("/", "/users/login", "/users/signup").permitAll()
                                 .requestMatchers("/db/review").hasRole(RoleEnum.ADMIN.name())
                                 // all other request are authenticated
                                 .anyRequest().authenticated()
@@ -66,7 +67,7 @@ public class SecurityConfiguration {
                                     //invalidate the HTTP session
                                     .invalidateHttpSession(true);
                         }
-                ).csrf(AbstractHttpConfigurer::disable).
+                ).csrf(AbstractHttpConfigurer::disable)/*.
                 rememberMe(
 
                         rememberMe -> {
@@ -76,12 +77,13 @@ public class SecurityConfiguration {
                                     .rememberMeCookieName("rememberme");
 
                         }
-                )
+                )*/
                 .build();
 
 
 
     }
+
 
     @Bean
 
@@ -97,4 +99,13 @@ public class SecurityConfiguration {
 
         return Pbkdf2PasswordEncoder.defaultsForSpringSecurity_v5_8();
     }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
+    }
+
+
+
+
 }

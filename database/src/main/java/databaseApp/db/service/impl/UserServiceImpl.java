@@ -3,10 +3,12 @@ package databaseApp.db.service.impl;
 import databaseApp.db.model.dto.UserSignupDTO;
 import databaseApp.db.model.entity.RoleEntity;
 import databaseApp.db.model.entity.UserEntity;
+import databaseApp.db.model.event.UserRegisteredEvent;
 import databaseApp.db.repository.UserRepository;
 import databaseApp.db.service.RoleService;
 import databaseApp.db.service.UserService;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +26,17 @@ public class UserServiceImpl implements UserService {
 
     private PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, RoleService roleService, PasswordEncoder passwordEncoder) {
+    private final ApplicationEventPublisher appEventPublisher;
+
+
+
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, RoleService roleService, PasswordEncoder passwordEncoder, ApplicationEventPublisher appEventPublisher) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
+
+        this.appEventPublisher = appEventPublisher;
     }
 
 
@@ -65,6 +73,13 @@ public class UserServiceImpl implements UserService {
         user.setRoles(roles);
 
         this.userRepository.save(user);
+        appEventPublisher.publishEvent(new UserRegisteredEvent(
+                "UserService",
+                userSignupDTO.getEmail(),
+                userSignupDTO.getName()
+        ));
         return true;
     }
+
+
 }
