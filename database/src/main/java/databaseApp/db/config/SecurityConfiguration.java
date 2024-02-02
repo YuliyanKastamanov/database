@@ -36,48 +36,14 @@ public class SecurityConfiguration {
                                 //all static resources are situated in (folders name) are available for anyone
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                                 //Allow anyone to see the home page and login page and signup page
-                                .requestMatchers("/", "/users/login", "/users/signup").permitAll()
+                                .requestMatchers("/users/login").permitAll()
+                                .requestMatchers("/users/signup").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("/db/review").hasRole(RoleEnum.ADMIN.name())
                                 // all other request are authenticated
                                 .anyRequest().authenticated()
 
 
-                ).formLogin(
-                        formLogin -> {
-                            formLogin
-                                    //redirect here when we access something which is not allowed.
-                                    //this is the page where we perform login
-                                    .loginPage("/users/login")
-
-                                    //The names of the input fields
-                                    .usernameParameter("uNumber")
-                                    .passwordParameter("password")
-                                    .defaultSuccessUrl("/")
-                                    .failureForwardUrl("/users/login-error");
-                            //.failureForwardUrl("/users/login-error");
-                        }
-                ).logout(
-                        logout -> {
-
-                            logout
-                                    //the url where we should POST something in order to perform logout
-                                    .logoutUrl("/users/logout")
-                                    //where to go when logged out
-                                    .logoutSuccessUrl("/")
-                                    //invalidate the HTTP session
-                                    .invalidateHttpSession(true);
-                        }
-                ).csrf(AbstractHttpConfigurer::disable)/*.
-                rememberMe(
-
-                        rememberMe -> {
-                            rememberMe
-                                    .key(rememberMeKey)
-                                    .rememberMeParameter("rememberme")
-                                    .rememberMeCookieName("rememberme");
-
-                        }
-                )*/
+                ).csrf(AbstractHttpConfigurer::disable)
                 .build();
 
 
@@ -86,7 +52,6 @@ public class SecurityConfiguration {
 
 
     @Bean
-
     public UserDetailsService userDetailsService(UserRepository userRepository) {
 
         // This service translates between "DB-APP" users and roles

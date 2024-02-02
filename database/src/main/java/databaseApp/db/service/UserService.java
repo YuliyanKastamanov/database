@@ -11,6 +11,4 @@ public interface UserService {
     boolean userSignup(UserSignupDTO userSignupDTO);
 
 
-
-
 }
