@@ -5,7 +5,6 @@ import databaseApp.db.model.entity.enums.RoleEnum;
 import databaseApp.db.repository.RoleRepository;
 import databaseApp.db.service.RoleService;
 import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 
 

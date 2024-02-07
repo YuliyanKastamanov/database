@@ -9,16 +9,16 @@ public class DbEntity extends BaseTask {
 
 
     @ManyToOne
-    private DbType dbType;
+    private TypeEntity typeEntity;
 
     public DbEntity() {
     }
 
-    public DbType getDbType() {
-        return dbType;
+    public TypeEntity getTypeEntity() {
+        return typeEntity;
     }
 
-    public void setDbType(DbType dbType) {
-        this.dbType = dbType;
+    public void setTypeEntity(TypeEntity typeEntity) {
+        this.typeEntity = typeEntity;
     }
 }

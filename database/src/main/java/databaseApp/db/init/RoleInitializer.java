@@ -1,7 +1,5 @@
 package databaseApp.db.init;
 
-
-import databaseApp.db.service.DbTypeService;
 import databaseApp.db.service.RoleService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

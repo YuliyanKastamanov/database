@@ -3,7 +3,6 @@ package databaseApp.db.web;
 import databaseApp.db.model.dto.UserLoginDTO;
 import databaseApp.db.model.dto.UserSignupDTO;
 import databaseApp.db.service.AuthService;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -11,15 +10,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import static org.springframework.http.HttpStatus.OK;
 
 @CrossOrigin("*")
 @RestController
 @RequestMapping(value = "/users")
 public class AuthController {
-
 
     private final AuthService authService;
     private final AuthenticationManager authenticationManager;
@@ -31,8 +27,7 @@ public class AuthController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<String > registerUser(@RequestBody UserSignupDTO userSignupDTO,
-                                                      UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<String > registerUser(@RequestBody UserSignupDTO userSignupDTO) {
 
         //check if UNumber already exist
         if (authService.existByUNumber(userSignupDTO.getuNumber())) {
@@ -46,11 +41,46 @@ public class AuthController {
 
         }
 
+        if (!userSignupDTO.getPassword().equals(userSignupDTO.getConfirmPassword())){
+            return new ResponseEntity<>("Password and confirm password should be the same!",HttpStatus.BAD_REQUEST);
+        }
+
+
         authService.userSignup(userSignupDTO);
 
 
         return new ResponseEntity<>("User registered successfully!", HttpStatus.CREATED);
     }
+
+/*
+    @PostMapping("/signup/add")
+    public ResponseEntity<String > registerUsers(@RequestBody List<UserSignupDTO> userSignupDTOs) {
+
+
+        for (UserSignupDTO userSignupDTO : userSignupDTOs) {
+            //check if UNumber/s already exist
+            if (authService.existByUNumber(userSignupDTO.getuNumber())) {
+                return new ResponseEntity<>("Provided u-number/s already exist!",HttpStatus.BAD_REQUEST);
+            }
+            //Password and confirm password not the same!
+            if (!userSignupDTO.getPassword().equals(userSignupDTO.getConfirmPassword())){
+                return new ResponseEntity<>("Password and confirm password are not the same!",HttpStatus.BAD_REQUEST);
+            }
+            //check if email/s already exist
+            if (authService.existsByEmail(userSignupDTO.getEmail())) {
+                return new ResponseEntity<>("Provided email/s already exist!", HttpStatus.BAD_REQUEST);
+
+            }
+        }
+
+
+        authService.usersSignup(userSignupDTOs);
+
+
+        return new ResponseEntity<>("Users registered successfully!", HttpStatus.CREATED);
+    }
+*/
+
 
 
     @PostMapping("/login")

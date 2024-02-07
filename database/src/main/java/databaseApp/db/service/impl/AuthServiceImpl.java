@@ -22,14 +22,13 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 
 
 @Service
 public class AuthServiceImpl implements AuthService {
-    @Value(value = "1")
-    private int maxSession;
 
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
@@ -44,7 +43,6 @@ public class AuthServiceImpl implements AuthService {
     private final SessionRegistry sessionRegistry;
 
     private final SecurityContextRepository securityContextRepository;
-
 
 
     public AuthServiceImpl(UserRepository userRepository,
@@ -69,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public boolean existByUNumber(String uNumber) {
 
-        if(userRepository.findByuNumber(uNumber).isPresent()){
+        if (userRepository.findByuNumber(uNumber).isPresent()) {
             return true;
         }
         return false;
@@ -77,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean existsByEmail(String email) {
-        if(userRepository.findByEmail(email).isPresent()){
+        if (userRepository.findByEmail(email).isPresent()) {
             return true;
         }
         return false;
@@ -86,10 +84,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public boolean userSignup(UserSignupDTO userSignupDTO) {
 
-        if (!userSignupDTO.getPassword().equals(userSignupDTO.getConfirmPassword())){
-
-            return false;
-        }
 
         UserEntity user = modelMapper.map(userSignupDTO, UserEntity.class);
         user.setPassword(passwordEncoder.encode(userSignupDTO.getPassword()));
@@ -107,6 +101,28 @@ public class AuthServiceImpl implements AuthService {
         return true;
     }
 
+/*
+    @Override
+    public boolean usersSignup(List<UserSignupDTO> userSignupDTOs) {
+
+        userSignupDTOs.forEach(userSignupDTO -> {
+
+            UserEntity user = modelMapper.map(userSignupDTO, UserEntity.class);
+            user.setPassword(passwordEncoder.encode(userSignupDTO.getPassword()));
+            RoleEntity role = roleService.findByName(userSignupDTO.getRole());
+            List<RoleEntity> roles = new ArrayList<>();
+            roles.add(role);
+            user.setRoles(roles);
+            this.userRepository.save(user);
+
+        });
+
+
+        return true;
+    }
+*/
+
+
     @Override
     public String login(UserLoginDTO userLoginDTO, HttpServletRequest request, HttpServletResponse response) {
 
@@ -114,7 +130,7 @@ public class AuthServiceImpl implements AuthService {
                 userLoginDTO.getuNumber(), userLoginDTO.getPassword()));
 
         // Validate session constraint is not exceeded
-       /* validateMaxSession(authentication);*/
+        /* validateMaxSession(authentication);*/
 
         // Create a new context
         SecurityContext context = SecurityContextHolder.createEmptyContext();

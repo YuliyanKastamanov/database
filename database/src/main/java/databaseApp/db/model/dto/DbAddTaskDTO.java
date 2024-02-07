@@ -1,46 +1,39 @@
-package databaseApp.db.model.entity;
+package databaseApp.db.model.dto;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
+import databaseApp.db.model.entity.enums.TypeEnum;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-import java.time.LocalDate;
+public class DbAddTaskDTO {
 
-@MappedSuperclass
-public abstract class BaseTask extends BaseEntity {
-
-    @Column(name = "task_number", nullable = false)
+    @NotBlank
+    @Size(min = 3, max = 20)
     private String taskNumber;
-    @Column(name = "revision", nullable = false)
+
+    @NotBlank
     private String revision;
-    @Column(name = "soc_status", nullable = false)
+    @NotBlank
     private String socStatus;
-    @Column(name = "soc_description", nullable = false)
+
+    @NotBlank
     private String socDescription;
-    @Column(name = "comment")
+
     private String comment;
-    @ManyToOne
-    private UserEntity jce;
-    @Column(name = "coversheet_sap")
+
     private String coversheetSap;
-    @Column(name = "coversheet_status")
+
     private String coversheetStatus;
-    @Column(name = "created_m_job")
+
     private String createdMJob;
-    @Column(name = "status_m_job")
+
     private String statusMJob;
-    @Column(name = "cri", nullable = false, unique = true)
-    private String cri;
-    @Column(name = "last_update")
-    private LocalDate lastUpdate;
-    @Column(name = "has_history")
-    private String hasHistory;
-    @Column(name = "current_update")
-    private String currentUpdate;
-    @Column(name = "sb_reference")
+
     private String sbReference;
 
-    public BaseTask() {
+    @NotBlank
+    private TypeEnum type;
+
+    public DbAddTaskDTO() {
     }
 
     public String getTaskNumber() {
@@ -83,14 +76,6 @@ public abstract class BaseTask extends BaseEntity {
         this.comment = comment;
     }
 
-    public UserEntity getJce() {
-        return jce;
-    }
-
-    public void setJce(UserEntity jce) {
-        this.jce = jce;
-    }
-
     public String getCoversheetSap() {
         return coversheetSap;
     }
@@ -123,43 +108,19 @@ public abstract class BaseTask extends BaseEntity {
         this.statusMJob = statusMJob;
     }
 
-    public String getCri() {
-        return cri;
-    }
-
-    public void setCri(String cri) {
-        this.cri = cri;
-    }
-
-    public LocalDate getLastUpdate() {
-        return lastUpdate;
-    }
-
-    public void setLastUpdate(LocalDate lastUpdate) {
-        this.lastUpdate = lastUpdate;
-    }
-
-    public String getHasHistory() {
-        return hasHistory;
-    }
-
-    public void setHasHistory(String hasHistory) {
-        this.hasHistory = hasHistory;
-    }
-
-    public String getCurrentUpdate() {
-        return currentUpdate;
-    }
-
-    public void setCurrentUpdate(String currentUpdate) {
-        this.currentUpdate = currentUpdate;
-    }
-
     public String getSbReference() {
         return sbReference;
     }
 
     public void setSbReference(String sbReference) {
         this.sbReference = sbReference;
+    }
+
+    public TypeEnum getType() {
+        return type;
+    }
+
+    public void setType(TypeEnum type) {
+        this.type = type;
     }
 }

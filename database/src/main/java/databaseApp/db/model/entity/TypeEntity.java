@@ -1,7 +1,7 @@
 package databaseApp.db.model.entity;
 
 
-import databaseApp.db.model.entity.enums.DbTypeEnum;
+import databaseApp.db.model.entity.enums.TypeEnum;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,19 +9,19 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "db_types")
-public class DbType extends BaseEntity {
+public class TypeEntity extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
-    private DbTypeEnum type;
+    private TypeEnum type;
 
-    public DbType() {
+    public TypeEntity() {
     }
 
-    public DbTypeEnum getType() {
+    public TypeEnum getType() {
         return type;
     }
 
-    public void setType(DbTypeEnum type) {
+    public void setType(TypeEnum type) {
         this.type = type;
     }
 }

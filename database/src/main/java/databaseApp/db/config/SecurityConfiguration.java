@@ -5,7 +5,6 @@ import databaseApp.db.repository.UserRepository;
 import databaseApp.db.service.impl.DbUserDetailsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
-import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,8 +13,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.context.ListeningSecurityContextHolderStrategy;
-import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -33,9 +30,6 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfiguration {
-
-    @Value(value = "1")
-    private int maxSession;
 
 
 /*    private final String rememberMeKey;
@@ -56,8 +50,10 @@ public class SecurityConfiguration {
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                                 //Allow anyone to see the home page and login page and signup page
                                 .requestMatchers("/users/login").permitAll()
-                                .requestMatchers("/users/signup").hasRole(RoleEnum.ADMIN.name())
+                                .requestMatchers("/users/signup").permitAll()
+                                .requestMatchers("/users/signup/add").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("test").hasRole(RoleEnum.ADMIN.name())
+                                .requestMatchers("/db/add/task").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("/db/review").hasRole(RoleEnum.ADMIN.name())
                                 // all other request are authenticated
                                 .anyRequest().authenticated()
@@ -67,8 +63,7 @@ public class SecurityConfiguration {
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) //
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
-                        .maximumSessions(maxSession) //
-                        .sessionRegistry(sessionRegistry())
+
                 )
                 .build();
 
