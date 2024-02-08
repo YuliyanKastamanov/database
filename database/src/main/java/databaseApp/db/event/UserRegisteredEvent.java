@@ -1,6 +1,7 @@
-package databaseApp.db.model.event;
+package databaseApp.db.event;
 
 import org.springframework.context.ApplicationEvent;
+
 
 public class UserRegisteredEvent extends ApplicationEvent {
 

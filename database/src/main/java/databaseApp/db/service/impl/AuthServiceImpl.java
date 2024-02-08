@@ -4,14 +4,13 @@ import databaseApp.db.model.dto.UserLoginDTO;
 import databaseApp.db.model.dto.UserSignupDTO;
 import databaseApp.db.model.entity.RoleEntity;
 import databaseApp.db.model.entity.UserEntity;
-import databaseApp.db.model.event.UserRegisteredEvent;
+import databaseApp.db.event.UserRegisteredEvent;
 import databaseApp.db.repository.UserRepository;
 import databaseApp.db.service.RoleService;
 import databaseApp.db.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,12 +34,11 @@ public class AuthServiceImpl implements AuthService {
 
     private final RoleService roleService;
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     private final AuthenticationManager authManager;
 
     private final ApplicationEventPublisher appEventPublisher;
-    private final SessionRegistry sessionRegistry;
 
     private final SecurityContextRepository securityContextRepository;
 
@@ -51,7 +49,6 @@ public class AuthServiceImpl implements AuthService {
                            PasswordEncoder passwordEncoder,
                            AuthenticationManager authManager,
                            ApplicationEventPublisher appEventPublisher,
-                           SessionRegistry sessionRegistry,
                            SecurityContextRepository securityContextRepository) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
@@ -59,7 +56,6 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
         this.authManager = authManager;
         this.appEventPublisher = appEventPublisher;
-        this.sessionRegistry = sessionRegistry;
         this.securityContextRepository = securityContextRepository;
     }
 
@@ -82,7 +78,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public boolean userSignup(UserSignupDTO userSignupDTO) {
+    public boolean userSignup(HttpServletRequest request, UserSignupDTO userSignupDTO) {
 
 
         UserEntity user = modelMapper.map(userSignupDTO, UserEntity.class);
@@ -98,6 +94,8 @@ public class AuthServiceImpl implements AuthService {
                 userSignupDTO.getEmail(),
                 userSignupDTO.getName()
         ));
+
+        //appEventPublisher.publishEvent(new UserRegisteredEvent(user,userSignupDTO.getEmail(), userSignupDTO.getuNumber()));
         return true;
     }
 
@@ -123,21 +121,18 @@ public class AuthServiceImpl implements AuthService {
 */
 
 
+
     @Override
     public String login(UserLoginDTO userLoginDTO, HttpServletRequest request, HttpServletResponse response) {
 
         Authentication authentication = authManager.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(
                 userLoginDTO.getuNumber(), userLoginDTO.getPassword()));
 
-        // Validate session constraint is not exceeded
-        /* validateMaxSession(authentication);*/
-
         // Create a new context
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
 
-        // Update SecurityContextHolder and Strategy
-        //this.securityContextHolderStrategy.setContext(context);
+        // Update SecurityContextHolder
         this.securityContextRepository.saveContext(context, request, response);
 
         return "Logged In!";

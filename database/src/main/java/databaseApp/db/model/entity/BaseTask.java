@@ -1,8 +1,6 @@
 package databaseApp.db.model.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 
 import java.time.LocalDate;
 
@@ -13,14 +11,22 @@ public abstract class BaseTask extends BaseEntity {
     private String taskNumber;
     @Column(name = "revision", nullable = false)
     private String revision;
-    @Column(name = "soc_status", nullable = false)
+    @Column(name = "soc_status")
     private String socStatus;
-    @Column(name = "soc_description", nullable = false)
+    @Column(name = "soc_description")
     private String socDescription;
     @Column(name = "comment")
     private String comment;
     @ManyToOne
+    @JoinTable(
+            name = "users_tasks",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "task_id")
+    )
     private UserEntity jce;
+
+    @Column(name = "jce_name")
+    private String jceName;
     @Column(name = "coversheet_sap")
     private String coversheetSap;
     @Column(name = "coversheet_status")
@@ -89,6 +95,14 @@ public abstract class BaseTask extends BaseEntity {
 
     public void setJce(UserEntity jce) {
         this.jce = jce;
+    }
+
+    public String getJceName() {
+        return jceName;
+    }
+
+    public void setJceName(String jceName) {
+        this.jceName = jceName;
     }
 
     public String getCoversheetSap() {

@@ -13,7 +13,7 @@ public interface AuthService {
 
     boolean existsByEmail(String email);
 
-    boolean userSignup(UserSignupDTO userSignupDTO);
+    boolean userSignup(HttpServletRequest request,UserSignupDTO userSignupDTO);
 
     //boolean usersSignup(List<UserSignupDTO> userSignupDTOs);
 

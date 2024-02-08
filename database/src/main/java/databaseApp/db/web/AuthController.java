@@ -1,11 +1,13 @@
 package databaseApp.db.web;
 
+import databaseApp.db.event.UserRegisteredEvent;
 import databaseApp.db.model.dto.UserLoginDTO;
 import databaseApp.db.model.dto.UserSignupDTO;
 import databaseApp.db.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,20 +16,19 @@ import static org.springframework.http.HttpStatus.OK;
 
 @CrossOrigin("*")
 @RestController
-@RequestMapping(value = "/users")
+@RequestMapping(value = "/auth")
 public class AuthController {
 
     private final AuthService authService;
-    private final AuthenticationManager authenticationManager;
 
-    public AuthController(AuthService authService, AuthenticationManager authenticationManager) {
+
+    public AuthController(AuthService authService) {
         this.authService = authService;
-        this.authenticationManager = authenticationManager;
     }
 
 
     @PostMapping("/signup")
-    public ResponseEntity<String > registerUser(@RequestBody UserSignupDTO userSignupDTO) {
+    public ResponseEntity<String > registerUser(@RequestBody UserSignupDTO userSignupDTO, HttpServletRequest request) {
 
         //check if UNumber already exist
         if (authService.existByUNumber(userSignupDTO.getuNumber())) {
@@ -46,7 +47,8 @@ public class AuthController {
         }
 
 
-        authService.userSignup(userSignupDTO);
+        authService.userSignup(request, userSignupDTO);
+
 
 
         return new ResponseEntity<>("User registered successfully!", HttpStatus.CREATED);
@@ -90,6 +92,8 @@ public class AuthController {
             HttpServletRequest request,
             HttpServletResponse response
     ) {
+
+
 
         return new ResponseEntity<>(authService.login(userLoginDTO, request, response), OK);
     }

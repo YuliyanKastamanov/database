@@ -1,7 +1,7 @@
 package databaseApp.db.init;
 
 
-import databaseApp.db.service.DbTypeService;
+import databaseApp.db.service.TaskTypeService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -9,16 +9,16 @@ import org.springframework.stereotype.Component;
 public class DbTypeInitializer implements CommandLineRunner {
 
 
-    private final DbTypeService dbTypeService;
+    private final TaskTypeService taskTypeService;
 
-    public DbTypeInitializer(DbTypeService dbTypeService) {
-        this.dbTypeService = dbTypeService;
+    public DbTypeInitializer(TaskTypeService taskTypeService) {
+        this.taskTypeService = taskTypeService;
     }
 
     @Override
     public void run(String... args) throws Exception {
 
-        dbTypeService.initDbTypes();
+        taskTypeService.initDbTypes();
 
     }
 

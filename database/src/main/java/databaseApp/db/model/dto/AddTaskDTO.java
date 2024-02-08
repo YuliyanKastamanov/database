@@ -1,10 +1,10 @@
 package databaseApp.db.model.dto;
 
-import databaseApp.db.model.entity.enums.TypeEnum;
+import databaseApp.db.model.entity.enums.TaskTypeEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class DbAddTaskDTO {
+public class AddTaskDTO {
 
     @NotBlank
     @Size(min = 3, max = 20)
@@ -12,10 +12,9 @@ public class DbAddTaskDTO {
 
     @NotBlank
     private String revision;
-    @NotBlank
+
     private String socStatus;
 
-    @NotBlank
     private String socDescription;
 
     private String comment;
@@ -31,9 +30,9 @@ public class DbAddTaskDTO {
     private String sbReference;
 
     @NotBlank
-    private TypeEnum type;
+    private TaskTypeEnum type;
 
-    public DbAddTaskDTO() {
+    public AddTaskDTO() {
     }
 
     public String getTaskNumber() {
@@ -116,11 +115,11 @@ public class DbAddTaskDTO {
         this.sbReference = sbReference;
     }
 
-    public TypeEnum getType() {
+    public TaskTypeEnum getType() {
         return type;
     }
 
-    public void setType(TypeEnum type) {
+    public void setType(TaskTypeEnum type) {
         this.type = type;
     }
 }

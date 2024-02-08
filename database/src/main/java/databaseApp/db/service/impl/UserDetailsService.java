@@ -7,15 +7,14 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 
-public class DbUserDetailsService implements UserDetailsService {
+public class UserDetailsService implements org.springframework.security.core.userdetails.UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public DbUserDetailsService(UserRepository userRepository) {
+    public UserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -25,7 +24,7 @@ public class DbUserDetailsService implements UserDetailsService {
 
         return userRepository
                 .findByuNumber(uNumber)
-                .map(DbUserDetailsService::map)
+                .map(UserDetailsService::map)
                 .orElseThrow(() -> new UsernameNotFoundException("User " + uNumber + " not found!"));
 
     }
@@ -35,7 +34,7 @@ public class DbUserDetailsService implements UserDetailsService {
         return User
                 .withUsername(userEntity.getuNumber())
                 .password(userEntity.getPassword())
-                .authorities(userEntity.getRoles().stream().map(DbUserDetailsService::map).toList() )
+                .authorities(userEntity.getRoles().stream().map(UserDetailsService::map).toList() )
                 .build();
 
 
