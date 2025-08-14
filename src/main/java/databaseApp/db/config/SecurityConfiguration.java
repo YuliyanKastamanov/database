@@ -21,8 +21,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-
+import java.util.List;
 
 
 @Configuration
@@ -50,14 +53,14 @@ public class SecurityConfiguration {
                                 .requestMatchers("/auth/login").permitAll()
                                 .requestMatchers("/").permitAll()
                                 .requestMatchers("/auth/register").permitAll()
-                                    .requestMatchers("test").hasRole(RoleEnum.ADMIN.name())
+                                .requestMatchers("/tasks/check/status").permitAll()
+                                .requestMatchers("test").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("/tasks/add").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("/tasks/add/rev").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("/get/tasks/taskType").hasRole(RoleEnum.ADMIN.name())
                                 .requestMatchers("/get/all").hasRole(RoleEnum.ADMIN.name())
-                                .requestMatchers("/tasks/review").hasRole(RoleEnum.ADMIN.name())
                                 // all other request are authenticated
-                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
 
 
                 ).csrf(AbstractHttpConfigurer::disable)
@@ -78,10 +81,19 @@ public class SecurityConfiguration {
                 )
                 .build();
 
+    }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // React dev server
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true); // Allow cookies/auth headers
 
-
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration); // Apply to all endpoints
+        return source;
     }
 
 
