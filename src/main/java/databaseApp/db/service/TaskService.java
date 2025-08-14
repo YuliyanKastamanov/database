@@ -11,7 +11,7 @@ import java.util.List;
 public interface TaskService {
     void addTask(AddTaskDTO addTaskDTO);
 
-    boolean existByCri(String taskNumber, TaskTypeEnum taskTypeEnum);
+    boolean existByCri(String taskNumber, String taskTypeEnum);
 
     List<ReturnTaskDTO> getAllTasksByTaskType(TaskTypeEnum type);
 
@@ -24,5 +24,5 @@ public interface TaskService {
 
     List<AddTaskResponseDTO> addAllTasks(List<AddTaskDTO> addTaskDTOs);
 
-    List<ReturnTaskDTO> getAllTasksWithoutOk(List<CheckTaskStatusDTO> checkTaskStatusDTO);
+    List<ReturnTaskDTO> getAllTasksWithoutOk(CheckTaskStatusDTO checkTaskStatusDTO);
 }

@@ -40,12 +40,32 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.springframework.security/spring-security-config
 	implementation 'org.springframework.security:spring-security-config:6.2.1'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+}
 
+/**
+ * React frontend build integration
+ */
+def frontendDir = file("${projectDir}/frontend")
 
+task installFrontend(type: Exec) {
+	workingDir frontendDir
+	commandLine "C:/Program Files/nodejs/npm.cmd", "install"
+}
 
+task buildFrontend(type: Exec) {
+	dependsOn installFrontend
+	workingDir frontendDir
+	commandLine "C:/Program Files/nodejs/npm.cmd", "run", "build"
+}
 
+task copyFrontend(type: Copy) {
+	dependsOn buildFrontend
+	from "${frontendDir}/build"
+	into "${projectDir}/src/main/resources/static"
+}
 
-
+tasks.named('processResources') {
+	dependsOn copyFrontend
 }
 
 tasks.named('test') {

@@ -26,6 +26,9 @@ import java.util.List;
 @Service
 public class TaskServiceImpl implements TaskService {
 
+    private static final String COVERSHEET = "Coversheet";
+    private static final String AGENCY = "Agency";
+
     private final ModelMapper modelMapper;
 
     private final TaskRepository taskRepository;
@@ -46,8 +49,6 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void addTask(AddTaskDTO addTaskDTO) {
         TaskEntity task = modelMapper.map(addTaskDTO, TaskEntity.class);
-
-
         TaskTypeEntity taskTypeEntity = getTaskTypeEntity(addTaskDTO);
         task.setTypeEntity(taskTypeEntity);
         task.setCri(createCRI(addTaskDTO.getTaskNumber(), taskTypeEntity).toString());
@@ -61,7 +62,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public boolean existByCri(String taskNumber, TaskTypeEnum taskTypeEnum) {
+    public boolean existByCri(String taskNumber, String taskTypeEnum) {
 
         String cri = extractCriType(taskTypeEnum) + "-" + taskNumber;
         TaskEntity task = taskRepository.findByCri(cri).orElse(null);
@@ -86,13 +87,15 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void changeTask(AddTaskDTO currentTask) {
         TaskEntity task = taskRepository
-                .findByCri(extractCriType(currentTask.getType()) +"-"+ currentTask.getTaskNumber())
+                .findByCri(extractCriType(currentTask.getType().name()) +"-"+ currentTask.getTaskNumber())
                 .orElse(null);
 
         task.setRevision(currentTask.getRevision());
         task.setSocStatus(currentTask.getSocStatus());
         task.setSocDescription(currentTask.getSocDescription());
         task.setLastUpdate(LocalDate.now());
+        String name = getUserName();
+        task.setJceName(name);
         task.setStatusMJob(null);
         task.setCoversheetStatus(null);
         taskRepository.save(task);
@@ -114,7 +117,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void addNewRevision(List<AddTaskDTO> addTaskDTOs) {
         for (AddTaskDTO currentTask : addTaskDTOs) {
-            if(existByCri(currentTask.getTaskNumber(), currentTask.getType())){
+            if(existByCri(currentTask.getTaskNumber(), currentTask.getType().name())){
                 changeTask(currentTask);
             }else {
                 addTask(currentTask);
@@ -129,7 +132,7 @@ public class TaskServiceImpl implements TaskService {
             AddTaskResponseDTO responseItem = new AddTaskResponseDTO();
             responseItem.setAddTaskDTO(dto);
 
-            if (existByCri(dto.getTaskNumber(), dto.getType())) {
+            if (existByCri(dto.getTaskNumber(), dto.getType().name())) {
                 responseItem.setStatus(ResponseEnum.ALREADY_EXIST);
             } else {
                 addTask(dto);
@@ -142,20 +145,49 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<ReturnTaskDTO> getAllTasksWithoutOk(List<CheckTaskStatusDTO> checkTaskStatusDTO) {
+    public List<ReturnTaskDTO> getAllTasksWithoutOk(CheckTaskStatusDTO checkTaskStatusDTO) {
 
         List<TaskEntity> allTasks = new ArrayList<>();
-        List<ReturnTaskDTO> allTasksToReturn = new ArrayList<>();
-        //TODO
-        return null;
+        checkTaskStatusDTO.getTaskNumbers().forEach(task -> {
+            String cri = extractCriType(checkTaskStatusDTO.getTaskType()) + "-" + task;
+            TaskEntity taskEntity = taskRepository.findByCri(cri).orElse(null);
+            allTasks.add(taskEntity);
+        });
+        return getNotOkTasks(allTasks, checkTaskStatusDTO.getProjectType());
     }
 
-    private String extractCriType(TaskTypeEnum type) {
+    private List<ReturnTaskDTO> getNotOkTasks(List<TaskEntity> allTasks, String projectType) {
+        List<ReturnTaskDTO> allTasksToReturn = new ArrayList<>();
 
-        if(type.name().length() == 6){
-            return type.name().substring(0, 3);
+        for (TaskEntity task : allTasks){
+            if(taskNotOk(task, projectType) || taskDeleted(task.getSocStatus()) || hasComment(task.getComment())){
+                allTasksToReturn.add( modelMapper.map(task, ReturnTaskDTO.class));
+            }
+        }
+
+        return allTasksToReturn;
+    }
+
+    private boolean hasComment(String comment) {
+        return !(comment == null || comment.isBlank());
+    }
+
+    private boolean taskDeleted(String socStatus) {
+            return socStatus.equals("D");
+    }
+
+    private boolean taskNotOk(TaskEntity task, String projectType) {
+
+        return projectType.equals(COVERSHEET) && (task.getCoversheetStatus()== null || task.getCoversheetStatus().isBlank())
+                || projectType.equals(AGENCY) && (task.getStatusMJob()== null || task.getStatusMJob().isBlank());
+    }
+
+    private String extractCriType(String type) {
+
+        if(type.length() == 6){
+            return type.substring(0, 3);
         }else {
-            return type.name().substring(0, 2);
+            return type.substring(0, 2);
         }
     }
 

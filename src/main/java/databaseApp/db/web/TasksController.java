@@ -54,10 +54,12 @@ public class TasksController {
     }
 
     @GetMapping("check/status")
-    public ResponseEntity<List<ReturnTaskDTO>> checkStatus(@RequestBody List<CheckTaskStatusDTO> checkTaskStatusDTO) {
+    public ResponseEntity<List<ReturnTaskDTO>> checkStatus(@RequestBody CheckTaskStatusDTO checkTaskStatusDTO) {
         List<ReturnTaskDTO> tasks = taskService.getAllTasksWithoutOk(checkTaskStatusDTO);
         return ResponseEntity.ok(tasks);
     }
+
+
 
 
 }
