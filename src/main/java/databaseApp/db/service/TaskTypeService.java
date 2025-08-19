@@ -8,5 +8,7 @@ public interface TaskTypeService {
     void initDbTypes();
 
 
-    TaskTypeEntity findByType(TaskTypeEnum name);
+    TaskTypeEntity findByType(TaskTypeEnum type);
+
+    void updateRevision(TaskTypeEnum type, String dbRevision);
 }

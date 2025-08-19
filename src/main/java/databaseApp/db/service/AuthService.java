@@ -13,7 +13,6 @@ public interface AuthService {
 
     boolean userRegister(HttpServletRequest request, UserRegisterDTO userRegisterDTO);
 
-    //boolean usersSignup(List<UserSignupDTO> userSignupDTOs);
 
     String login(UserLoginDTO userLoginDTO, HttpServletRequest request, HttpServletResponse response);
 

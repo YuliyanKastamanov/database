@@ -6,6 +6,7 @@ import databaseApp.db.service.impl.UserDetailsService;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -20,7 +21,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,37 +50,43 @@ public class SecurityConfiguration {
 
                         // define which urls are visible by which users
                         authorizeRequest -> authorizeRequest
-                                //all static resources are situated in (folders name) are available for anyone
+                                // Static resources (css, js, images, etc.)
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                                //Allow anyone to see the home page and login page and signup page
-                                .requestMatchers("/auth/login").permitAll()
-                                .requestMatchers("/").permitAll()
-                                .requestMatchers("/auth/register").permitAll()
-                                .requestMatchers("/tasks/check/status").permitAll()
-                                .requestMatchers("test").hasRole(RoleEnum.ADMIN.name())
-                                .requestMatchers("/tasks/add").hasRole(RoleEnum.ADMIN.name())
-                                .requestMatchers("/tasks/add/rev").hasRole(RoleEnum.ADMIN.name())
-                                .requestMatchers("/get/tasks/taskType").hasRole(RoleEnum.ADMIN.name())
-                                .requestMatchers("/get/all").hasRole(RoleEnum.ADMIN.name())
-                                // all other request are authenticated
-                                .anyRequest().permitAll()
+
+                                .requestMatchers("/").permitAll()       // home page stays public
+                                .requestMatchers("/auth/login").permitAll()       // home page stays public
+                                //.requestMatchers("/auth/login").anonymous()  // only allow NOT logged in users
+
+                                // Registration restricted to ADMIN
+                                .requestMatchers("/auth/register").hasRole(RoleEnum.ADMIN.name())
+
+                                // Tasks API
+                                .requestMatchers(HttpMethod.POST, "/tasks").hasRole(RoleEnum.ADMIN.name())           // create tasks
+                                .requestMatchers(HttpMethod.POST, "/tasks/revisions").hasRole(RoleEnum.ADMIN.name()) // add revision
+                                .requestMatchers(HttpMethod.PUT, "/tasks").hasRole(RoleEnum.ADMIN.name())            // update tasks
+                                // Reports (Admin only)
+                                .requestMatchers(HttpMethod.GET, "/tasks").hasRole(RoleEnum.ADMIN.name())            // get all / get by type
+                                // Normal users can only check status
+                                .requestMatchers(HttpMethod.GET, "/tasks/status").permitAll()
+                                // Test route
+                                .requestMatchers("/test").hasRole(RoleEnum.ADMIN.name())
+                                // Everything else requires authentication
+                                .anyRequest().authenticated()
 
 
                 ).csrf(AbstractHttpConfigurer::disable)
+                /*.csrf(csrf -> csrf
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                )*/
                 .sessionManagement(sessionManagement -> sessionManagement
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) //
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
 
-                ).logout(
-                        logout -> {
-                            logout
-                                    // the URL where we should POST something in order to perform the logout
-                                    .logoutUrl("/auth/logout")
-                                    // where to go when logged out?
-                                    .logoutSuccessUrl("/")
-                                    // invalidate the HTTP session
-                                    .invalidateHttpSession(true);
-                        }
+                ).logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout", "GET"))// for production GET should be deleted -> POST
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID", "XSRF-TOKEN")
                 )
                 .build();
 

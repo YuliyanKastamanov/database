@@ -6,37 +6,29 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 
-public class AddTaskDTO {
+public class UpdateTaskDTO {
 
     @NotBlank
     @Size(min = 3, max = 20)
     private String taskNumber;
-
-    @NotBlank
     private String revision;
-
     private String socStatus;
-
     private String socDescription;
-
     private String comment;
-
+    @NotBlank
     private String coversheetSap;
-
+    @NotBlank
     private String coversheetStatus;
-
+    @NotBlank
     private String createdMJob;
-
+    @NotBlank
     private String statusMJob;
-
     private String sbReference;
-
-    @NotNull
+    @NotBlank
     private TaskTypeEnum type;
 
-    public AddTaskDTO() {
+    public UpdateTaskDTO() {
     }
-
 
     public String getTaskNumber() {
         return taskNumber;

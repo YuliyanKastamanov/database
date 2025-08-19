@@ -27,6 +27,12 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
 
+    private static final String INCORRECT_OLD_PASSWORD = "Old password is incorrect!";
+    private static final String NAME = "Yuliyan Kastamanov";
+    private static final String EMAIL = "yuliyan.kastamanov@lht-sofia.com";
+    private static final String PASSWORD = "welcome";
+    private static final String U_NUMBER = "U656285";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authManager;
@@ -48,28 +54,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void changePassword(PasswordDto passwordDto) {
-
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String uNumber = authentication.getName();
         UserEntity user = findByUNumber(uNumber);
+
+        // Check old password
+        if (!passwordEncoder.matches(passwordDto.getOldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException(INCORRECT_OLD_PASSWORD);
+        }
+
         user.setPassword(passwordEncoder.encode(passwordDto.getNewPassword()));
         userRepository.save(user);
-
-
-
-
     }
 
     @Override
     public void initUser() {
         if(userRepository.count() == 0){
             UserRegisterDTO userRegisterDTO = new UserRegisterDTO();
-            userRegisterDTO.setName("Yuliyan Kastamanov");
-            userRegisterDTO.setEmail("yuliyan.kastamanov@lht-sofia.com");
-            userRegisterDTO.setPassword("welcome");
-            userRegisterDTO.setConfirmPassword("welcome");
-            userRegisterDTO.setuNumber("u656285");
+            userRegisterDTO.setName(NAME);
+            userRegisterDTO.setEmail(EMAIL);
+            userRegisterDTO.setPassword(PASSWORD);
+            userRegisterDTO.setConfirmPassword(PASSWORD);
+            userRegisterDTO.setuNumber(U_NUMBER);
             userRegisterDTO.setRole(RoleEnum.ADMIN);
             authService.userRegister(userRegisterDTO);
 

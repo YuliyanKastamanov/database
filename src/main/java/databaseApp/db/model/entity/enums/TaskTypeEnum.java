@@ -2,5 +2,35 @@ package databaseApp.db.model.entity.enums;
 
 public enum TaskTypeEnum {
 
-    MPD320, MPD330, MPD340, MPD350, MS320, MS330, MS340_300, MS340_600, MS350, MS380, BAW320, JBU320, NKS320, WZZ320
+    MPD320,
+    MPD330,
+    MPD340,
+    MPD350,
+    MS320,
+    MS330,
+    MS340_300,
+    MS340_600,
+    MS350,
+    MS380,
+    BAW320,
+    JBU320,
+    NKS320,
+    WZZ320,
+    MPD737NG,
+    MPD737MAX,
+    MPD787,
+    MS787,
+    SVA320,
+    OCN320,
+    NAX737,
+    EZY320,
+    EWG320,
+    PGT320,
+    FTT320,
+    VIV320,
+    SVA330,
+    VIR350,
+    IBE350,
+    JZR320,
+    LAN320
 }

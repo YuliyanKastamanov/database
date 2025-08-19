@@ -13,8 +13,21 @@ public class ApplicationBeenConfiguration {
 
     @Bean
     public ModelMapper modelMapper(){
+        ModelMapper modelMapper = new ModelMapper();
 
-        return new ModelMapper();
+        // Skip null values
+        modelMapper.getConfiguration().setSkipNullEnabled(true);
+
+        // Skip blank strings as well
+        modelMapper.getConfiguration().setPropertyCondition(ctx -> {
+            Object source = ctx.getSource();
+            if (source instanceof String) {
+                return !((String) source).isBlank();
+            }
+            return source != null;
+        });
+
+        return modelMapper;
     }
 
     @Bean

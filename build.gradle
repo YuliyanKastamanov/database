@@ -47,25 +47,25 @@ dependencies {
  */
 def frontendDir = file("${projectDir}/frontend")
 
-task installFrontend(type: Exec) {
-	workingDir frontendDir
+tasks.register("installFrontend", Exec) {
+	workingDir = frontendDir
 	commandLine "C:/Program Files/nodejs/npm.cmd", "install"
 }
 
-task buildFrontend(type: Exec) {
-	dependsOn installFrontend
-	workingDir frontendDir
+tasks.register("buildFrontend", Exec) {
+	dependsOn("installFrontend")
+	workingDir = frontendDir
 	commandLine "C:/Program Files/nodejs/npm.cmd", "run", "build"
 }
 
-task copyFrontend(type: Copy) {
-	dependsOn buildFrontend
-	from "${frontendDir}/build"
-	into "${projectDir}/src/main/resources/static"
+tasks.register("copyFrontend", Copy) {
+	dependsOn("buildFrontend")
+	from("${frontendDir}/build")
+	into("${projectDir}/src/main/resources/static")
 }
 
-tasks.named('processResources') {
-	dependsOn copyFrontend
+tasks.named("processResources") {
+	dependsOn("copyFrontend")
 }
 
 tasks.named('test') {

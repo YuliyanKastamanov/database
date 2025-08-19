@@ -1,15 +1,20 @@
 package databaseApp.db.model.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+
+import databaseApp.db.model.entity.enums.TaskTypeEnum;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+
 
 import java.util.List;
 
 public class CheckTaskStatusDTO {
-    @NotBlank
-    @Size(min = 3, max = 20)
+
+    @NotEmpty
     private List<String> taskNumbers;
-    private String taskType;
+    @NotNull
+    private TaskTypeEnum taskType;
+    @NotNull
     private String projectType;
 
     public CheckTaskStatusDTO() {
@@ -23,11 +28,11 @@ public class CheckTaskStatusDTO {
         this.taskNumbers = taskNumbers;
     }
 
-    public String getTaskType() {
+    public TaskTypeEnum getTaskType() {
         return taskType;
     }
 
-    public void setTaskType(String taskType) {
+    public void setTaskType(TaskTypeEnum taskType) {
         this.taskType = taskType;
     }
 

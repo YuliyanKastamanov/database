@@ -20,8 +20,23 @@ public class ReturnTaskDTO {
     private String currentUpdate;
     private String sbReference;
     private String id;
+    private boolean exists = true; // true if task exists
+    private String statusInfo;   // optional descriptive message
 
     public ReturnTaskDTO() {
+    }
+
+
+
+    public boolean isExists() { return exists; }
+    public void setExists(boolean exists) { this.exists = exists; }
+
+    public String getStatusInfo() {
+        return statusInfo;
+    }
+
+    public void setStatusInfo(String statusInfo) {
+        this.statusInfo = statusInfo;
     }
 
     public String getTaskNumber() {

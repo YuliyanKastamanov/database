@@ -16,14 +16,14 @@ public abstract class BaseTask extends BaseEntity {
     private String socDescription;
     @Column(name = "comment")
     private String comment;
-    @ManyToOne
+    /*@ManyToOne
     @JoinTable(
             name = "users_tasks",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "task_id")
     )
     private UserEntity jce;
-
+*/
     @Column(name = "jce_name")
     private String jceName;
     @Column(name = "coversheet_sap")
@@ -92,9 +92,9 @@ public abstract class BaseTask extends BaseEntity {
         return jce;
     }
 */
-    public void setJce(UserEntity jce) {
+    /*public void setJce(UserEntity jce) {
         this.jce = jce;
-    }
+    }*/
 
     public String getJceName() {
         return jceName;

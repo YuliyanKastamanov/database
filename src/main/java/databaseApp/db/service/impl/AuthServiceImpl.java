@@ -29,6 +29,9 @@ import java.util.List;
 @Service
 public class AuthServiceImpl implements AuthService {
 
+    private static final String USER_LOGGED_IN = "User %s logged in successfully!";
+    private static final String USER_SERVICE = "UserService";
+
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
@@ -63,18 +66,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public boolean existByUNumber(String uNumber) {
 
-        if (userRepository.findByuNumber(uNumber).isPresent()) {
-            return true;
-        }
-        return false;
+        return userRepository.findByuNumber(uNumber).isPresent();
     }
 
     @Override
     public boolean existsByEmail(String email) {
-        if (userRepository.findByEmail(email).isPresent()) {
-            return true;
-        }
-        return false;
+        return userRepository.findByEmail(email).isPresent();
     }
 
     @Override
@@ -87,20 +84,18 @@ public class AuthServiceImpl implements AuthService {
         List<RoleEntity> roles = new ArrayList<>();
         roles.add(role);
         if(role.getRole().equals(RoleEnum.ADMIN)){
-            RoleEntity roleUser = new RoleEntity();
-            roleUser.setRole(RoleEnum.USER);
+            RoleEntity roleUser = roleService.findByName(RoleEnum.USER);
             roles.add(roleUser);
         }
         user.setRoles(roles);
 
         this.userRepository.save(user);
         appEventPublisher.publishEvent(new UserRegisteredEvent(
-                "UserService",
+                USER_SERVICE,
                 userRegisterDTO.getEmail(),
                 userRegisterDTO.getName()
         ));
 
-        //appEventPublisher.publishEvent(new UserRegisteredEvent(user,userSignupDTO.getEmail(), userSignupDTO.getuNumber()));
         return true;
     }
     @Override
@@ -122,29 +117,6 @@ public class AuthServiceImpl implements AuthService {
 
 
 
-/*
-    @Override
-    public boolean usersSignup(List<UserSignupDTO> userSignupDTOs) {
-
-        userSignupDTOs.forEach(userSignupDTO -> {
-
-            UserEntity user = modelMapper.map(userSignupDTO, UserEntity.class);
-            user.setPassword(passwordEncoder.encode(userSignupDTO.getPassword()));
-            RoleEntity role = roleService.findByName(userSignupDTO.getRole());
-            List<RoleEntity> roles = new ArrayList<>();
-            roles.add(role);
-            user.setRoles(roles);
-            this.userRepository.save(user);
-
-        });
-
-
-        return true;
-    }
-*/
-
-
-
     @Override
     public String login(UserLoginDTO userLoginDTO, HttpServletRequest request, HttpServletResponse response) {
 
@@ -157,8 +129,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Update SecurityContextHolder
         this.securityContextRepository.saveContext(context, request, response);
-
-        return "Logged In!";
+        return String.format(USER_LOGGED_IN, userLoginDTO.getuNumber());
     }
 
 
