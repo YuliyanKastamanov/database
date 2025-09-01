@@ -6,7 +6,7 @@ function App() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:8080/tasks/check/status", {
+    fetch("http://localhost:8080/tasks/status", {
       method: "GET",
       credentials: "include", //cookies
       headers: {

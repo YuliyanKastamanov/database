@@ -2,6 +2,7 @@ package databaseApp.db.model.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @MappedSuperclass
 public abstract class BaseTask extends BaseEntity {
@@ -16,14 +17,6 @@ public abstract class BaseTask extends BaseEntity {
     private String socDescription;
     @Column(name = "comment")
     private String comment;
-    /*@ManyToOne
-    @JoinTable(
-            name = "users_tasks",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "task_id")
-    )
-    private UserEntity jce;
-*/
     @Column(name = "jce_name")
     private String jceName;
     @Column(name = "coversheet_sap")
@@ -34,10 +27,9 @@ public abstract class BaseTask extends BaseEntity {
     private String createdMJob;
     @Column(name = "status_m_job")
     private String statusMJob;
-    @Column(name = "cri", nullable = false, unique = true)
-    private String cri;
+
     @Column(name = "last_update")
-    private LocalDate lastUpdate;
+    private LocalDateTime lastUpdate;
     @Column(name = "has_history")
     private String hasHistory;
     @Column(name = "current_update")
@@ -88,14 +80,6 @@ public abstract class BaseTask extends BaseEntity {
         this.comment = comment;
     }
 
-    /*public UserEntity getJce() {
-        return jce;
-    }
-*/
-    /*public void setJce(UserEntity jce) {
-        this.jce = jce;
-    }*/
-
     public String getJceName() {
         return jceName;
     }
@@ -136,19 +120,11 @@ public abstract class BaseTask extends BaseEntity {
         this.statusMJob = statusMJob;
     }
 
-    public String getCri() {
-        return cri;
-    }
-
-    public void setCri(String cri) {
-        this.cri = cri;
-    }
-
-    public LocalDate getLastUpdate() {
+    public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
-    public void setLastUpdate(LocalDate lastUpdate) {
+    public void setLastUpdate(LocalDateTime lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
 

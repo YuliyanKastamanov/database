@@ -16,6 +16,8 @@ public class CheckTaskStatusDTO {
     private TaskTypeEnum taskType;
     @NotNull
     private String projectType;
+    @NotNull
+    private String revision;
 
     public CheckTaskStatusDTO() {
     }
@@ -42,5 +44,13 @@ public class CheckTaskStatusDTO {
 
     public void setProjectType(String projectType) {
         this.projectType = projectType;
+    }
+
+    public String getRevision() {
+        return revision;
+    }
+
+    public void setRevision(String revision) {
+        this.revision = revision;
     }
 }

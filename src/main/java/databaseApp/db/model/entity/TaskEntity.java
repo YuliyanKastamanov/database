@@ -11,14 +11,26 @@ public class TaskEntity extends BaseTask {
     @ManyToOne
     private TaskTypeEntity taskTypeEntity;
 
+    @Column(name = "cri", nullable = false, unique = true)
+    private String cri;
+
+
     public TaskEntity() {
     }
 
-    public TaskTypeEntity getTypeEntity() {
+    public TaskTypeEntity getTaskTypeEntity() {
         return taskTypeEntity;
     }
 
-    public void setTypeEntity(TaskTypeEntity taskTypeEntity) {
+    public void setTaskTypeEntity(TaskTypeEntity taskTypeEntity) {
         this.taskTypeEntity = taskTypeEntity;
+    }
+
+    public String getCri() {
+        return cri;
+    }
+
+    public void setCri(String cri) {
+        this.cri = cri;
     }
 }

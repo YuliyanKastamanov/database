@@ -1,11 +1,10 @@
 package databaseApp.db.service.impl;
 
 import databaseApp.db.model.dto.*;
-import databaseApp.db.model.entity.TaskEntity;
-import databaseApp.db.model.entity.TaskTypeEntity;
-import databaseApp.db.model.entity.UserEntity;
+import databaseApp.db.model.entity.*;
 import databaseApp.db.model.entity.enums.ResponseEnum;
 import databaseApp.db.model.entity.enums.TaskTypeEnum;
+import databaseApp.db.repository.OldTaskRepository;
 import databaseApp.db.repository.TaskRepository;
 import databaseApp.db.service.TaskService;
 import databaseApp.db.service.TaskTypeService;
@@ -16,10 +15,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -35,6 +34,7 @@ public class TaskServiceImpl implements TaskService {
     private static final String A340_300 = "/300";
     private static final String A340_600 = "/600";
     private static final String SVA330 = "/330";
+    private static final int MAX_OLD_REVISIONS = 3;
 
     private final ModelMapper modelMapper;
 
@@ -43,13 +43,15 @@ public class TaskServiceImpl implements TaskService {
     private final TaskTypeService taskTypeService;
 
     private final UserService userService;
+    private final OldTaskRepository oldTaskRepository;
 
 
-    public TaskServiceImpl(ModelMapper modelMapper, TaskRepository taskRepository, TaskTypeService taskTypeService, UserService userService) {
+    public TaskServiceImpl(ModelMapper modelMapper, TaskRepository taskRepository, TaskTypeService taskTypeService, UserService userService, OldTaskRepository oldTaskRepository) {
         this.modelMapper = modelMapper;
         this.taskRepository = taskRepository;
         this.taskTypeService = taskTypeService;
         this.userService = userService;
+        this.oldTaskRepository = oldTaskRepository;
     }
 
 
@@ -57,12 +59,13 @@ public class TaskServiceImpl implements TaskService {
     public void addTask(AddTaskDTO addTaskDTO) {
         TaskEntity task = modelMapper.map(addTaskDTO, TaskEntity.class);
         TaskTypeEntity taskTypeEntity = getTaskTypeEntity(addTaskDTO);
-        task.setTypeEntity(taskTypeEntity);
+        task.setTaskTypeEntity(taskTypeEntity);
         task.setCri(createCRI(addTaskDTO.getTaskNumber(), taskTypeEntity).toString());
 
         String name = getUserName();
         task.setJceName(name);
-        task.setLastUpdate(LocalDate.now());
+        task.setLastUpdate(LocalDateTime.now());
+
         taskRepository.save(task);
 
     }
@@ -120,14 +123,33 @@ public class TaskServiceImpl implements TaskService {
         TaskEntity task = taskRepository
                 .findByCri(extractCriType(currentTask.getType())+ currentTask.getTaskNumber())
                 .orElse(null);
+        addToOldRevision(task);
         taskTypeService.updateRevision(currentTask.getType(), currentTask.getRevision());
         modelMapper.map(currentTask, task);
-        task.setLastUpdate(LocalDate.now());
+        task.setLastUpdate(LocalDateTime.now());
         String name = getUserName();
         task.setJceName(name);
         task.setStatusMJob("-");
         task.setCoversheetStatus("-");
         taskRepository.save(task);
+
+    }
+
+    private void addToOldRevision(TaskEntity task) {
+        OldTasksEntity oldRevisionTask = new OldTasksEntity();
+        modelMapper.map(task, oldRevisionTask);
+        oldRevisionTask.setLastUpdate(LocalDateTime.now());
+        String name = getUserName();
+        task.setJceName(name);
+        oldTaskRepository.save(oldRevisionTask);
+
+        // Проверка за брой стари ревизии за същия task (cri)
+        List<OldTasksEntity> oldRevisions = oldTaskRepository.findByCriOrderByLastUpdateAsc(task.getCri());
+
+        // Ако имаме повече от 3 ревизии, изтриваме най-старите
+        if (oldRevisions.size() > MAX_OLD_REVISIONS) {
+            oldTaskRepository.delete(oldRevisions.get(0));
+        }
 
     }
 
@@ -153,39 +175,47 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<ReturnTaskDTO> getAllTasksWithoutOk(CheckTaskStatusDTO checkTaskStatusDTO) {
         List<ReturnTaskDTO> result = new ArrayList<>();
-        checkTaskStatusDTO.getTaskNumbers().forEach(task -> {
-            String cri = extractCriType(checkTaskStatusDTO.getTaskType()) + task;
-            Optional<TaskEntity> taskEntityOpt = taskRepository.findByCri(cri);
-            ReturnTaskDTO dto = new ReturnTaskDTO();
-            dto.setTaskNumber(task);
+        TaskTypeEntity taskTypeEntity = taskTypeService.findByType(checkTaskStatusDTO.getTaskType());
+        String currentDbRev = taskTypeEntity.getDbRevision();
 
-            if (taskEntityOpt.isPresent()) {
-                TaskEntity taskEntity = taskEntityOpt.get();
+        checkTaskStatusDTO.getTaskNumbers().forEach(taskNumber -> {
+            String cri = extractCriType(checkTaskStatusDTO.getTaskType()) + taskNumber;
+            TaskEntity currentTask = null;
+            OldTasksEntity oldTask = null;
+
+            // Опитай първо да намериш стар таск, ако е проверка за стара ревизия
+            if (!currentDbRev.equals(checkTaskStatusDTO.getRevision())) {
+                oldTask = oldTaskRepository.findByCriAndRevision(cri, checkTaskStatusDTO.getRevision()).orElse(null);
+            }
+
+            // Ако не е намерен стар таск, Или работим с най-нова ревизия, потърси текущата ревизия
+            if (oldTask == null) {
+                currentTask = taskRepository.findByCri(cri).orElse(null);
+            }
+
+            BaseTask taskToCheck = oldTask != null ? oldTask : currentTask;
+
+            if (taskToCheck != null) {
                 List<String> statusList = new ArrayList<>();
-                if (taskDeleted(taskEntity.getSocStatus())) {
-                    statusList.add(DELETED);
-                }
-                if (hasComment(taskEntity.getComment())) {
-                    statusList.add(HAS_COMMENT);
-                }
-                if (taskNotOk(taskEntity, checkTaskStatusDTO.getProjectType())) {
-                    statusList.add(NOT_OK);
-                }
+                if (taskDeleted(taskToCheck.getSocStatus())) statusList.add(DELETED);
+                if (hasComment(taskToCheck.getComment())) statusList.add(HAS_COMMENT);
+                if (taskNotOk(taskToCheck, checkTaskStatusDTO.getProjectType())) statusList.add(NOT_OK);
 
-                dto = modelMapper.map(taskEntity, ReturnTaskDTO.class);
-                dto.setExists(true);
-                if (!statusList.isEmpty()){
+                if (!statusList.isEmpty()) {
+                    ReturnTaskDTO dto = modelMapper.map(taskToCheck, ReturnTaskDTO.class);
+                    dto.setExists(true);
                     dto.setStatusInfo(String.join(", ", statusList));
                     result.add(dto);
                 }
-
             } else {
-                // Task does not exist
+                ReturnTaskDTO dto = new ReturnTaskDTO();
+                dto.setTaskNumber(taskNumber);
                 dto.setExists(false);
                 dto.setStatusInfo(NOT_EXISTING);
                 result.add(dto);
             }
         });
+
         return result;
     }
 
@@ -205,7 +235,7 @@ public class TaskServiceImpl implements TaskService {
         TaskEntity taskToUpdate = taskRepository.findByCri(extractCriType(task.getType()) + task.getTaskNumber()).orElse(null);
         if (taskToUpdate != null) {
             modelMapper.map(task, taskToUpdate);
-            taskToUpdate.setLastUpdate(LocalDate.now());
+            taskToUpdate.setLastUpdate(LocalDateTime.now());
             String name = getUserName();
             taskToUpdate.setJceName(name);
             taskRepository.save(taskToUpdate);
@@ -218,13 +248,23 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private boolean taskDeleted(String socStatus) {
+        if(socStatus == null){
+            return false;
+        }
             return socStatus.equalsIgnoreCase(SOC_STATUS_D);
     }
 
-    private boolean taskNotOk(TaskEntity task, String projectType) {
+    private boolean taskNotOk(BaseTask task, String projectType) {
 
-        return projectType.equals(COVERSHEET) && (!task.getCoversheetStatus().equalsIgnoreCase(TASK_STATUS_OK))
-                || projectType.equals(AGENCY) && (!task.getStatusMJob().equalsIgnoreCase(TASK_STATUS_OK));
+        return switch (projectType) {
+            case COVERSHEET -> !TASK_STATUS_OK.equalsIgnoreCase(
+                    task.getCoversheetStatus() != null ? task.getCoversheetStatus() : ""
+            );
+            case AGENCY -> !TASK_STATUS_OK.equalsIgnoreCase(
+                    task.getStatusMJob() != null ? task.getStatusMJob() : ""
+            );
+            default -> false;
+        };
     }
 
     private String extractCriType(TaskTypeEnum type) {
