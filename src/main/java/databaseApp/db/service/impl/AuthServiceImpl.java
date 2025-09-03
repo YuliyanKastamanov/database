@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -115,22 +116,37 @@ public class AuthServiceImpl implements AuthService {
 
     }
 
+    @Override
+    public UserEntity findByUNumber(String uNumber) {
+        return userRepository.findByuNumber(uNumber)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User with U-Number " + uNumber + " not found"));
+    }
 
 
     @Override
     public String login(UserLoginDTO userLoginDTO, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            Authentication authentication = authManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(
+                            userLoginDTO.getuNumber(), userLoginDTO.getPassword()
+                    )
+            );
 
-        Authentication authentication = authManager.authenticate(UsernamePasswordAuthenticationToken.unauthenticated(
-                userLoginDTO.getuNumber(), userLoginDTO.getPassword()));
+            // Create a new context
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
 
-        // Create a new context
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
+            // Save context
+            this.securityContextRepository.saveContext(context, request, response);
 
-        // Update SecurityContextHolder
-        this.securityContextRepository.saveContext(context, request, response);
-        return String.format(USER_LOGGED_IN, userLoginDTO.getuNumber());
+            return String.format(USER_LOGGED_IN, userLoginDTO.getuNumber());
+        } catch (BadCredentialsException ex) {
+            // грешна парола или несъществуващ user
+            throw new RuntimeException("Incorrect username or password"); // или custom exception
+        }
     }
+
 
 
 }

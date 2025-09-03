@@ -1,7 +1,9 @@
 package databaseApp.db.web;
 
 import databaseApp.db.model.dto.UserLoginDTO;
+import databaseApp.db.model.dto.UserLoginResponseDTO;
 import databaseApp.db.model.dto.UserRegisterDTO;
+import databaseApp.db.model.entity.UserEntity;
 import databaseApp.db.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,7 +11,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static org.springframework.http.HttpStatus.OK;
 
 @CrossOrigin()
@@ -54,13 +63,30 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<String> authenticateUser(
-            @Valid
-            @RequestBody UserLoginDTO userLoginDTO,
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) {
-        return new ResponseEntity<>(authService.login(userLoginDTO, request, response), OK);
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody UserLoginDTO dto,
+                                              HttpServletRequest request,
+                                              HttpServletResponse response) {
+        try {
+            String msg = authService.login(dto, request, response);
+            UserEntity user = authService.findByUNumber(dto.getuNumber());
+            List<String> roles = user.getRoles().stream().map(r -> r.getRole().name()).toList();
+
+            return ResponseEntity.ok(new UserLoginResponseDTO(user.getuNumber(), user.getEmail(), roles, msg));
+        } catch (RuntimeException ex) {
+            // JSON за frontend
+            return ResponseEntity.status(401).body(Map.of("message", ex.getMessage()));
+        }
+    }
+    @RestControllerAdvice
+    public static class GlobalExceptionHandler {
+
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+            Map<String, String> errors = new HashMap<>();
+            ex.getBindingResult().getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage()));
+            return ResponseEntity.badRequest().body(errors);
+        }
     }
 
 

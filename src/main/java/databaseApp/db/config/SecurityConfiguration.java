@@ -52,7 +52,7 @@ public class SecurityConfiguration {
                         authorizeRequest -> authorizeRequest
                                 // Static resources (css, js, images, etc.)
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-
+                                .requestMatchers("/", "/index.html", "/static/**", "/auth/login", "/auth/register").permitAll()
                                 .requestMatchers("/").permitAll()       // home page stays public
                                 .requestMatchers("/auth/login").permitAll()       // home page stays public
                                 //.requestMatchers("/auth/login").anonymous()  // only allow NOT logged in users
@@ -71,7 +71,8 @@ public class SecurityConfiguration {
                                 // Test route
                                 .requestMatchers("/test").hasRole(RoleEnum.ADMIN.name())
                                 // Everything else requires authentication
-                                .anyRequest().authenticated()
+                                .anyRequest().permitAll()
+
 
 
                 ).csrf(AbstractHttpConfigurer::disable)
@@ -95,7 +96,7 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // React dev server
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080")); // React dev server
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true); // Allow cookies/auth headers
