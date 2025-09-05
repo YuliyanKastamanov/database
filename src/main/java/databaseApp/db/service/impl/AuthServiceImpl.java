@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public boolean existByUNumber(String uNumber) {
 
-        return userRepository.findByuNumber(uNumber).isPresent();
+        return userRepository.findByuNumberIgnoreCase(uNumber).isPresent();
     }
 
     @Override
@@ -118,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserEntity findByUNumber(String uNumber) {
-        return userRepository.findByuNumber(uNumber)
+        return userRepository.findByuNumberIgnoreCase(uNumber)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "User with U-Number " + uNumber + " not found"));
     }
@@ -127,9 +127,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String login(UserLoginDTO userLoginDTO, HttpServletRequest request, HttpServletResponse response) {
         try {
+            // Normalize U-number (trim + uppercase)
+            String normalizedUNumber = userLoginDTO.getuNumber().trim().toUpperCase();
+
             Authentication authentication = authManager.authenticate(
                     UsernamePasswordAuthenticationToken.unauthenticated(
-                            userLoginDTO.getuNumber(), userLoginDTO.getPassword()
+                            normalizedUNumber,
+                            userLoginDTO.getPassword()
                     )
             );
 
@@ -140,12 +144,14 @@ public class AuthServiceImpl implements AuthService {
             // Save context
             this.securityContextRepository.saveContext(context, request, response);
 
-            return String.format(USER_LOGGED_IN, userLoginDTO.getuNumber());
+            return String.format(USER_LOGGED_IN, normalizedUNumber);
+
         } catch (BadCredentialsException ex) {
             // грешна парола или несъществуващ user
-            throw new RuntimeException("Incorrect username or password"); // или custom exception
+            throw new RuntimeException("Incorrect username or password");
         }
     }
+
 
 
 

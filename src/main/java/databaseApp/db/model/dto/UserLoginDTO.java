@@ -5,11 +5,11 @@ import jakarta.validation.constraints.Size;
 
 public class UserLoginDTO {
 
-    @Size(min = 7, max = 7, message = "please provide correct username U + 6 digits")
+    @Size(min = 7, max = 7, message = "Please provide correct username U + 6 digits")
     @NotBlank
     private String uNumber;
 
-    @Size(min = 5, max = 20, message = "please provide correct password")
+    @Size(min = 5, max = 20, message = "Please provide correct password")
     @NotBlank
     private String password;
 

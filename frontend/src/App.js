@@ -1,92 +1,74 @@
-import { useState, useEffect } from "react";
-import Login from "./Login";
+import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import TaskStatus from "./pages/TaskStatus";
+import Generator from "./pages/Generator";
+import Reports from "./pages/Reports";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
-  // Функция за зареждане на задачите
-  const fetchTasks = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("http://localhost:8080/tasks", {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-      const data = await res.json();
-      setTasks(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Logout функция
   const logout = async () => {
     try {
       const res = await fetch("http://localhost:8080/auth/logout", {
+        method: "POST",            // ако бекендът е на POST
         credentials: "include",
       });
       if (!res.ok) throw new Error("Logout failed");
       setUser(null);
-      setTasks([]);
     } catch (err) {
       alert(err.message);
     }
   };
 
-  // Автоматично зареждане на tasks при логнат user
-  useEffect(() => {
-    if (user) {
-      fetchTasks();
-    }
-  }, [user]);
-
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-      {!user ? (
-        <Login onLogin={setUser} />
-      ) : (
-        <>
-          <h2>Welcome {user.uNumber}</h2>
-          <p>Email: {user.email}</p>
-          <p>Roles: {user.roles.join(", ")}</p>
-          <button onClick={logout}>Logout</button>
+    <Router>
+      <Routes>
+        {/* / -> към /login или /dashboard според това дали има user */}
+        <Route
+          path="/"
+          element={<Navigate to={user ? "/dashboard" : "/login"} replace />}
+        />
 
-          {user.roles.includes("ADMIN") ? (
-            <>
-              <h3>Admin Panel</h3>
-              <button onClick={() => alert("Create new Task!")}>
-                Create Task
-              </button>
-            </>
-          ) : (
-            <h3>User Dashboard</h3>
-          )}
+        {/* Login: ако вече има user, не показвай Login, а пренасочи към /dashboard */}
+        <Route
+          path="/login"
+          element={
+            user ? <Navigate to="/dashboard" replace /> : <Login onLogin={setUser} />
+          }
+        />
 
-          <h3>Tasks</h3>
-          {loading ? (
-            <p>Loading tasks...</p>
-          ) : error ? (
-            <p style={{ color: "red" }}>Error: {error}</p>
-          ) : tasks.length > 0 ? (
-            <ul>
-              {tasks.map((task) => (
-                <li key={task.id}>
-                  {task.name} - {task.status}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No tasks available.</p>
-          )}
-        </>
-      )}
-    </div>
+        <Route
+          path="/dashboard"
+          element={user ? <Dashboard user={user} onLogout={logout} /> : <Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="/task-status"
+          element={user ? <TaskStatus user={user} /> : <Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="/generator"
+          element={user ? <Generator user={user} /> : <Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="/reports"
+          element={
+            user && user.roles?.includes("ADMIN") ? (
+              <Reports user={user} />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
+          }
+        />
+
+        {/* хваща всичко друго */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserEntity findByUNumber(String uNumber) {
-        return userRepository.findByuNumber(uNumber).orElse(null);
+        return userRepository.findByuNumberIgnoreCase(uNumber).orElse(null);
     }
 
     @Override

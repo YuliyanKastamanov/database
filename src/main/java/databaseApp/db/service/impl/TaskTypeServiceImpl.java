@@ -6,6 +6,7 @@ import databaseApp.db.repository.TaskTypeRepository;
 import databaseApp.db.service.TaskTypeService;
 import org.springframework.stereotype.Service;
 import java.util.Arrays;
+import java.util.List;
 
 
 @Service
@@ -73,6 +74,11 @@ public class TaskTypeServiceImpl implements TaskTypeService {
         TaskTypeEntity taskTypeEntity = findByType(taskType);
         taskTypeEntity.setDbRevision(dbRevision);
         taskTypeRepository.save(taskTypeEntity);
+    }
+
+    @Override
+    public List<TaskTypeEntity> getAll() {
+        return taskTypeRepository.findAll();
     }
 
 

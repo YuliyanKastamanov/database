@@ -69,14 +69,22 @@ public class AuthController {
         try {
             String msg = authService.login(dto, request, response);
             UserEntity user = authService.findByUNumber(dto.getuNumber());
-            List<String> roles = user.getRoles().stream().map(r -> r.getRole().name()).toList();
+            List<String> roles = user.getRoles().stream()
+                    .map(r -> r.getRole().name())
+                    .toList();
 
-            return ResponseEntity.ok(new UserLoginResponseDTO(user.getuNumber(), user.getEmail(), roles, msg));
+            return ResponseEntity.ok(new UserLoginResponseDTO(
+                    user.getuNumber(),
+                    user.getEmail(),
+                    user.getName(),   // <-- вече връщаме и името
+                    roles,
+                    msg
+            ));
         } catch (RuntimeException ex) {
-            // JSON за frontend
             return ResponseEntity.status(401).body(Map.of("message", ex.getMessage()));
         }
     }
+
     @RestControllerAdvice
     public static class GlobalExceptionHandler {
 

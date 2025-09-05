@@ -23,7 +23,7 @@ public class UserDetailsService implements org.springframework.security.core.use
     public UserDetails loadUserByUsername(String uNumber) throws UsernameNotFoundException {
 
         return userRepository
-                .findByuNumber(uNumber)
+                .findByuNumberIgnoreCase(uNumber)
                 .map(UserDetailsService::map)
                 .orElseThrow(() -> new UsernameNotFoundException("User " + uNumber + " not found!"));
 

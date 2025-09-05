@@ -48,7 +48,7 @@ public class TasksController {
     }
 
 
-    @GetMapping("/status")
+    @PostMapping("/status")
     public ResponseEntity<List<ReturnTaskDTO>> checkStatus(@Valid @RequestBody CheckTaskStatusDTO checkTaskStatusDTO) {
         List<ReturnTaskDTO> tasks = taskService.getAllTasksWithoutOk(checkTaskStatusDTO);
         return ResponseEntity.ok(tasks);

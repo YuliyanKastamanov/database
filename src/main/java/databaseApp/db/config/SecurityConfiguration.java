@@ -45,52 +45,54 @@ public class SecurityConfiguration {
 
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity.authorizeHttpRequests(
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+                .authorizeHttpRequests(authz -> authz
+                        // Static resources
+                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 
-                        // define which urls are visible by which users
-                        authorizeRequest -> authorizeRequest
-                                // Static resources (css, js, images, etc.)
-                                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                                .requestMatchers("/", "/index.html", "/static/**", "/auth/login", "/auth/register").permitAll()
-                                .requestMatchers("/").permitAll()       // home page stays public
-                                .requestMatchers("/auth/login").permitAll()       // home page stays public
-                                //.requestMatchers("/auth/login").anonymous()  // only allow NOT logged in users
+                        // React SPA routes
+                        .requestMatchers(
+                                "/", "/index.html", "/static/**", "/assets/**", "/favicon.ico",
+                                "/login", "/dashboard", "/task-status", "/generator", "/reports",
+                                "/manage-users", "/manage-tasks"
+                        ).permitAll()
 
-                                // Registration restricted to ADMIN
-                                .requestMatchers("/auth/register").hasRole(RoleEnum.ADMIN.name())
+                        // Auth API
+                        .requestMatchers("/auth/login", "/auth/register").permitAll()
 
-                                // Tasks API
-                                .requestMatchers(HttpMethod.POST, "/tasks").hasRole(RoleEnum.ADMIN.name())           // create tasks
-                                .requestMatchers(HttpMethod.POST, "/tasks/revisions").hasRole(RoleEnum.ADMIN.name()) // add revision
-                                .requestMatchers(HttpMethod.PUT, "/tasks").hasRole(RoleEnum.ADMIN.name())            // update tasks
-                                // Reports (Admin only)
-                                .requestMatchers(HttpMethod.GET, "/tasks").hasRole(RoleEnum.ADMIN.name())            // get all / get by type
-                                // Normal users can only check status
-                                .requestMatchers(HttpMethod.GET, "/tasks/status").permitAll()
-                                // Test route
-                                .requestMatchers("/test").hasRole(RoleEnum.ADMIN.name())
-                                // Everything else requires authentication
-                                .anyRequest().permitAll()
+                        // Registration restricted to ADMIN
+                        .requestMatchers("/auth/register").hasRole(RoleEnum.ADMIN.name())
 
+                        // Tasks API
+                        .requestMatchers(HttpMethod.POST, "/tasks").hasRole(RoleEnum.ADMIN.name())
+                        .requestMatchers(HttpMethod.POST, "/tasks/revisions").hasRole(RoleEnum.ADMIN.name())
+                        .requestMatchers(HttpMethod.PUT, "/tasks").hasRole(RoleEnum.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/tasks").hasRole(RoleEnum.ADMIN.name())
 
+                        // Normal users can check status
+                        .requestMatchers(HttpMethod.POST, "/tasks/status").permitAll()
 
-                ).csrf(AbstractHttpConfigurer::disable)
-                /*.csrf(csrf -> csrf
-                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                )*/
-                .sessionManagement(sessionManagement -> sessionManagement
-                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) //
-                        .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession) //
+                        // Example protected route
+                        .requestMatchers("/test").hasRole(RoleEnum.ADMIN.name())
 
-                ).logout(logout -> logout
-                        .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout", "GET"))// for production GET should be deleted -> POST
+                        // Everything else requires authentication
+                        .anyRequest().authenticated()
+                )
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession)
+                )
+                .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout", "POST")) // или GET за по-лесно
                         .logoutSuccessUrl("/")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID", "XSRF-TOKEN")
                 )
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .build();
-
     }
 
     @Bean
