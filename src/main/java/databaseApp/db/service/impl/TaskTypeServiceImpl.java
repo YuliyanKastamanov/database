@@ -72,6 +72,16 @@ public class TaskTypeServiceImpl implements TaskTypeService {
     @Override
     public void updateRevision(TaskTypeEnum taskType, String dbRevision) {
         TaskTypeEntity taskTypeEntity = findByType(taskType);
+
+        if (taskTypeEntity.getDbRevision() != null && !taskTypeEntity.getDbRevision().equals(dbRevision)) {
+            String oldRevision1 = taskTypeEntity.getDbRevision();
+            String oldRevision2 = taskTypeEntity.getOldRevision1();
+            String oldRevision3 = taskTypeEntity.getOldRevision2();
+            taskTypeEntity.setOldRevision1(oldRevision1);
+            taskTypeEntity.setOldRevision2(oldRevision2);
+            taskTypeEntity.setOldRevision3(oldRevision3);
+        }
+
         taskTypeEntity.setDbRevision(dbRevision);
         taskTypeRepository.save(taskTypeEntity);
     }

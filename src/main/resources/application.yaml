@@ -19,6 +19,11 @@ spring:
       filter:
         enabled: true
 
+  server:
+    servlet:
+      session:
+        timeout=20m
+
   databaseApp:
     default.admin.pass: ${DEFAULT_ADMIN_PASS:topsecret}
     remember.me.key: ${REMEMBER_ME_KEY:topsecret}

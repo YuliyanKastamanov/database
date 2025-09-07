@@ -21,7 +21,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -48,35 +47,36 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(authz -> authz
-                        // Static resources
+                        // Статични ресурси
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 
-                        // React SPA routes
+                        // React SPA static files (само frontend-а да може да се сервира)
                         .requestMatchers(
-                                "/", "/index.html", "/static/**", "/assets/**", "/favicon.ico",
+                                "/", "/index.html",
+                                "/static/**", "/assets/**", "/favicon.ico",
                                 "/login", "/dashboard", "/task-status", "/generator", "/reports",
                                 "/manage-users", "/manage-tasks"
                         ).permitAll()
 
                         // Auth API
-                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+                        .requestMatchers("/auth/login").permitAll()
 
                         // Registration restricted to ADMIN
                         .requestMatchers("/auth/register").hasRole(RoleEnum.ADMIN.name())
 
-                        // Tasks API
+                        // Tasks API (admin)
                         .requestMatchers(HttpMethod.POST, "/tasks").hasRole(RoleEnum.ADMIN.name())
                         .requestMatchers(HttpMethod.POST, "/tasks/revisions").hasRole(RoleEnum.ADMIN.name())
                         .requestMatchers(HttpMethod.PUT, "/tasks").hasRole(RoleEnum.ADMIN.name())
                         .requestMatchers(HttpMethod.GET, "/tasks").hasRole(RoleEnum.ADMIN.name())
 
                         // Normal users can check status
-                        .requestMatchers(HttpMethod.POST, "/tasks/status").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/tasks/status").authenticated()
 
                         // Example protected route
                         .requestMatchers("/test").hasRole(RoleEnum.ADMIN.name())
 
-                        // Everything else requires authentication
+                        // Всичко друго иска автентикация
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
@@ -84,9 +84,12 @@ public class SecurityConfiguration {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .sessionFixation(SessionManagementConfigurer.SessionFixationConfigurer::newSession)
                 )
+                .sessionManagement(session -> session
+                        .maximumSessions(1)
+                        .maxSessionsPreventsLogin(false))
                 .logout(logout -> logout
-                        .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout", "POST")) // или GET за по-лесно
-                        .logoutSuccessUrl("/")
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout", "POST"))
+                        .logoutSuccessUrl("/") // redirect след logout
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID", "XSRF-TOKEN")
                 )
@@ -94,6 +97,7 @@ public class SecurityConfiguration {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

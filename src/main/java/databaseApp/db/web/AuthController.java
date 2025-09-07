@@ -10,8 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.springframework.http.HttpStatus.OK;
 
 @CrossOrigin()
 @RestController
@@ -96,7 +95,24 @@ public class AuthController {
             return ResponseEntity.badRequest().body(errors);
         }
     }
+    @GetMapping("/me")
+    public ResponseEntity<?> currentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
 
+        String username = authentication.getName(); // това е UNumber
+        UserEntity user = authService.findByUNumber(username);
+
+        List<String> roles = user.getRoles()
+                .stream()
+                .map(r -> r.getRole().name())
+                .toList();
+
+        return ResponseEntity.ok(
+                new UserLoginResponseDTO(user.getuNumber(), user.getEmail(),user.getName(), roles, "Authenticated")
+        );
+    }
 
 
     @RequestMapping("/logout")

@@ -13,8 +13,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -23,8 +21,8 @@ import java.util.List;
 @Service
 public class TaskServiceImpl implements TaskService {
 
-    private static final String COVERSHEET = "Coversheet";
-    private static final String AGENCY = "Agency";
+    private static final String COVERSHEET = "coversheet";
+    private static final String AGENCY = "agency";
     private static final String DELETED = "Deleted";
     private static final String HAS_COMMENT = "Has Comment";
     private static final String NOT_OK = "Not OK";
@@ -61,7 +59,6 @@ public class TaskServiceImpl implements TaskService {
         TaskTypeEntity taskTypeEntity = getTaskTypeEntity(addTaskDTO);
         task.setTaskTypeEntity(taskTypeEntity);
         task.setCri(createCRI(addTaskDTO.getTaskNumber(), taskTypeEntity).toString());
-
         String name = getUserName();
         task.setJceName(name);
         task.setLastUpdate(LocalDateTime.now());
@@ -109,6 +106,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void addNewRevision(List<AddTaskDTO> addTaskDTOs) {
+        taskTypeService.updateRevision(addTaskDTOs.get(0).getType(), addTaskDTOs.get(0).getRevision());
         for (AddTaskDTO currentTask : addTaskDTOs) {
             if(existByCri(currentTask.getTaskNumber(), currentTask.getType())){
                 taskRevision(currentTask);
@@ -124,7 +122,7 @@ public class TaskServiceImpl implements TaskService {
                 .findByCri(extractCriType(currentTask.getType())+ currentTask.getTaskNumber())
                 .orElse(null);
         addToOldRevision(task);
-        taskTypeService.updateRevision(currentTask.getType(), currentTask.getRevision());
+
         modelMapper.map(currentTask, task);
         task.setLastUpdate(LocalDateTime.now());
         String name = getUserName();
@@ -155,6 +153,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<AddTaskResponseDTO> addAllTasks(List<AddTaskDTO> addTaskDTOs) {
+        AddTaskDTO newTask = new AddTaskDTO();
         List<AddTaskResponseDTO> results = new ArrayList<>();
         for (AddTaskDTO dto : addTaskDTOs) {
             AddTaskResponseDTO responseItem = new AddTaskResponseDTO();
@@ -164,11 +163,13 @@ public class TaskServiceImpl implements TaskService {
                 responseItem.setStatus(ResponseEnum.ALREADY_EXIST);
             } else {
                 addTask(dto);
+                newTask = dto;
                 responseItem.setStatus(ResponseEnum.ADDED);
             }
 
             results.add(responseItem);
         }
+        taskTypeService.updateRevision(newTask.getType(), newTask.getRevision());
         return results;
     }
 
@@ -197,9 +198,15 @@ public class TaskServiceImpl implements TaskService {
 
             if (taskToCheck != null) {
                 List<String> statusList = new ArrayList<>();
-                if (taskDeleted(taskToCheck.getSocStatus())) statusList.add(DELETED);
-                if (hasComment(taskToCheck.getComment())) statusList.add(HAS_COMMENT);
-                if (taskNotOk(taskToCheck, checkTaskStatusDTO.getProjectType())) statusList.add(NOT_OK);
+                if (taskDeleted(taskToCheck.getSocStatus())) {
+                    statusList.add(DELETED);
+                }
+                if (hasComment(taskToCheck.getComment())) {
+                    statusList.add(HAS_COMMENT);
+                }
+                if (taskNotOk(taskToCheck, checkTaskStatusDTO.getProjectType())) {
+                    statusList.add(NOT_OK);
+                }
 
                 if (!statusList.isEmpty()) {
                     ReturnTaskDTO dto = modelMapper.map(taskToCheck, ReturnTaskDTO.class);
@@ -256,7 +263,7 @@ public class TaskServiceImpl implements TaskService {
 
     private boolean taskNotOk(BaseTask task, String projectType) {
 
-        return switch (projectType) {
+        return switch (projectType.toLowerCase()) {
             case COVERSHEET -> !TASK_STATUS_OK.equalsIgnoreCase(
                     task.getCoversheetStatus() != null ? task.getCoversheetStatus() : ""
             );

@@ -18,8 +18,35 @@ public class TaskTypeEntity extends BaseEntity {
     private String criType;
 
     private String dbRevision;
+    private String oldRevision1;
+    private String oldRevision2;
+    private String oldRevision3;
 
     public TaskTypeEntity() {
+    }
+
+    public String getOldRevision1() {
+        return oldRevision1;
+    }
+
+    public void setOldRevision1(String oldRevision1) {
+        this.oldRevision1 = oldRevision1;
+    }
+
+    public String getOldRevision2() {
+        return oldRevision2;
+    }
+
+    public void setOldRevision2(String oldRevision2) {
+        this.oldRevision2 = oldRevision2;
+    }
+
+    public String getOldRevision3() {
+        return oldRevision3;
+    }
+
+    public void setOldRevision3(String oldRevision3) {
+        this.oldRevision3 = oldRevision3;
     }
 
     public TaskTypeEnum getType() {

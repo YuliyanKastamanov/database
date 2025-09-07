@@ -6,12 +6,12 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 
-import java.util.List;
+import java.util.Set;
 
 public class CheckTaskStatusDTO {
 
     @NotEmpty
-    private List<String> taskNumbers;
+    private Set<String> taskNumbers;
     @NotNull
     private TaskTypeEnum taskType;
     @NotNull
@@ -22,11 +22,11 @@ public class CheckTaskStatusDTO {
     public CheckTaskStatusDTO() {
     }
 
-    public List<String> getTaskNumbers() {
+    public Set<String> getTaskNumbers() {
         return taskNumbers;
     }
 
-    public void setTaskNumbers(List<String> taskNumbers) {
+    public void setTaskNumbers(Set<String> taskNumbers) {
         this.taskNumbers = taskNumbers;
     }
 

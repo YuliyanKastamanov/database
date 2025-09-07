@@ -1,15 +1,15 @@
-// src/pages/Dashboard.js
+// src/pages/ManageTasks.js
 import { Link, useNavigate } from "react-router-dom";
 import bg from "../assets/lufthansa_aircraft.jpg";
 
-function Dashboard({ user, onLogout }) {
+function ManageTasks({ user, onLogout }) {
   const navigate = useNavigate();
   const isAdmin = Array.isArray(user?.roles) && user.roles.includes("ADMIN");
   const displayName = user?.name || user?.uNumber || "User";
 
-  // Карта в центъра (запазваме по-големия размер и #0A1D3D)
+  // Същите параметри на картите като в Dashboard
   const cardBase = {
-    background: "rgba(255,255,255,0.88)", // по-малко прозрачни
+    background: "rgba(255,255,255,0.88)",
     borderRadius: 16,
     padding: 28,
     width: 260,
@@ -35,7 +35,7 @@ function Dashboard({ user, onLogout }) {
       title={tooltip}
       style={cardBase}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-4px)"; // без промяна на размера на текста
+        e.currentTarget.style.transform = "translateY(-4px)";
         e.currentTarget.style.boxShadow = "0 14px 30px rgba(0,0,0,0.28)";
       }}
       onMouseLeave={(e) => {
@@ -59,11 +59,11 @@ function Dashboard({ user, onLogout }) {
         fontFamily: "Helvetica, Arial, sans-serif",
       }}
     >
-      {/* Sidebar (dark, white text) */}
+      {/* Sidebar (същият като в Dashboard) */}
       <aside
         style={{
           width: 240,
-          background: "rgba(0,0,0,0.65)",   // <-- еднакво с header
+          background: "rgba(0,0,0,0.65)",
           color: "#fff",
           padding: 20,
           display: "flex",
@@ -74,7 +74,9 @@ function Dashboard({ user, onLogout }) {
         <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 18 }}>
           Menu
         </div>
-
+       {/* Винаги показваме Dashboard */}
+       <NavButton to="/dashboard">Dashboard</NavButton>
+        {/* Навигация — същата логика */}
         {isAdmin ? (
           <>
             <NavButton to="/manage-users">Manage Users</NavButton>
@@ -111,10 +113,10 @@ function Dashboard({ user, onLogout }) {
 
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {/* Header (dark, white text) */}
+        {/* Header (същият като в Dashboard) */}
         <header
           style={{
-            background: "rgba(0,0,0,0.65)",   // <-- еднакво със sidebar
+            background: "rgba(0,0,0,0.65)",
             color: "#fff",
             padding: "16px 28px",
             display: "flex",
@@ -123,7 +125,6 @@ function Dashboard({ user, onLogout }) {
             boxShadow: "0 4px 20px rgba(0,0,0,0.35)",
           }}
         >
-
           <div>
             <div style={{ fontWeight: 800, fontSize: 22 }}>
               Jobcard Database App
@@ -140,14 +141,14 @@ function Dashboard({ user, onLogout }) {
                 background: "rgba(255,255,255,0.18)",
               }}
             >
-              {isAdmin ? "Master View" : "Project View"}
+              Manage Tasks
             </div>
           </div>
 
           <div style={{ fontWeight: 700 }}>👤 {displayName}</div>
         </header>
 
-        {/* Cards */}
+        {/* Cards (плочки на 1–2 реда, според ширината) */}
         <main
           style={{
             flex: 1,
@@ -159,50 +160,41 @@ function Dashboard({ user, onLogout }) {
             gap: 10,
           }}
         >
-          {isAdmin ? (
-            <>
-              <Card
-                title="Manage Users"
-                to="/manage-users"
-                tooltip="Register and manage application users"
-              />
-              <Card
-                title="Manage Tasks"
-                to="/manage-tasks"
-                tooltip="Add, update and review tasks"
-              />
-              <Card
-                title="Generator"
-                to="/generator"
-                tooltip="Admin generator operations"
-              />
-              <Card
-                title="Reports"
-                to="/reports"
-                tooltip="Generate and download reports"
-              />
-            </>
-          ) : (
-            <>
-              <Card
-                title="Task Status"
-                to="/task-status"
-                tooltip="Check the status of your tasks"
-              />
-              <Card
-                title="Generator"
-                to="/generator"
-                tooltip="Generate Excel reports"
-              />
-            </>
-          )}
+          {/* Вече имплементирано: Task Status */}
+          <Card
+            title="Task Status"
+            to="/task-status"
+            tooltip="Check the status of tasks by type / revision"
+          />
+
+          {/* Placeholder-и за останалите операции от TasksController */}
+          <Card
+            title="Add Tasks"
+            to="/manage-tasks/add"
+            tooltip="Bulk add tasks to the database"
+          />
+          <Card
+            title="Add New Revision"
+            to="/manage-tasks/revisions"
+            tooltip="Create a new revision for a task type"
+          />
+          <Card
+            title="View Tasks"
+            to="/manage-tasks/view"
+            tooltip="Browse tasks (all or by task type)"
+          />
+          <Card
+            title="Update Tasks"
+            to="/manage-tasks/update"
+            tooltip="Bulk update fields across tasks"
+          />
         </main>
       </div>
     </div>
   );
 }
 
-// Навигационен бутон в тъмен sidebar
+// Навигационен бутон — идентичен с Dashboard
 function NavButton({ to, children }) {
   return (
     <Link
@@ -234,4 +226,4 @@ function NavButton({ to, children }) {
   );
 }
 
-export default Dashboard;
+export default ManageTasks;
