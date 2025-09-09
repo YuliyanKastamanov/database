@@ -175,7 +175,7 @@ function ManageTasks({ user, onLogout }) {
           />
           <Card
             title="Add New Revision"
-            to="/manage-tasks/revisions"
+            to="/manage-tasks/revision"
             tooltip="Create a new revision for a task type"
           />
           <Card
