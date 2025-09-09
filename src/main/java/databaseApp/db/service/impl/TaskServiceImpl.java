@@ -54,9 +54,11 @@ public class TaskServiceImpl implements TaskService {
 
 
     @Override
-    public void addTask(AddTaskDTO addTaskDTO) {
+    public void addTask(AddTaskDTO addTaskDTO, TaskTypeEnum type, String revision) {
+        addTaskDTO.setRevision(revision);
         TaskEntity task = modelMapper.map(addTaskDTO, TaskEntity.class);
-        TaskTypeEntity taskTypeEntity = getTaskTypeEntity(addTaskDTO);
+        TaskTypeEntity taskTypeEntity = getTaskTypeEntity(type);
+        taskTypeEntity.setDbRevision(revision);
         task.setTaskTypeEntity(taskTypeEntity);
         task.setCri(createCRI(addTaskDTO.getTaskNumber(), taskTypeEntity).toString());
         String name = getUserName();
@@ -105,26 +107,28 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public void addNewRevision(List<AddTaskDTO> addTaskDTOs) {
-        taskTypeService.updateRevision(addTaskDTOs.get(0).getType(), addTaskDTOs.get(0).getRevision());
-        for (AddTaskDTO currentTask : addTaskDTOs) {
-            if(existByCri(currentTask.getTaskNumber(), currentTask.getType())){
-                taskRevision(currentTask);
+    public void addNewRevision(AddTaskDTOs addTaskDTOs) {
+
+        for (AddTaskDTO currentTask : addTaskDTOs.getTaskNumbers()) {
+            if(existByCri(currentTask.getTaskNumber(), addTaskDTOs.getType())){
+                taskRevision(currentTask, addTaskDTOs.getType(),addTaskDTOs.getRevision());
             }else {
-                addTask(currentTask);
+                addTask(currentTask, addTaskDTOs.getType(), addTaskDTOs.getRevision());
             }
         }
+        taskTypeService.updateRevision(addTaskDTOs.getType(), addTaskDTOs.getRevision());
     }
 
     @Override
-    public void taskRevision(AddTaskDTO currentTask) {
+    public void taskRevision(AddTaskDTO currentTask, TaskTypeEnum type, String revision) {
         TaskEntity task = taskRepository
-                .findByCri(extractCriType(currentTask.getType())+ currentTask.getTaskNumber())
+                .findByCri(extractCriType(type)+ currentTask.getTaskNumber())
                 .orElse(null);
-        addToOldRevision(task);
+        addToOldRevision(task, task.getTaskTypeEntity().getDbRevision());
 
         modelMapper.map(currentTask, task);
         task.setLastUpdate(LocalDateTime.now());
+        task.setRevision(revision);
         String name = getUserName();
         task.setJceName(name);
         task.setStatusMJob("-");
@@ -133,10 +137,13 @@ public class TaskServiceImpl implements TaskService {
 
     }
 
-    private void addToOldRevision(TaskEntity task) {
+    private void addToOldRevision(TaskEntity task, String revision) {
         OldTasksEntity oldRevisionTask = new OldTasksEntity();
         modelMapper.map(task, oldRevisionTask);
         oldRevisionTask.setLastUpdate(LocalDateTime.now());
+        //Revision in the task old revision due to no changes,
+        //Set current DB revision allows to see on which revision the task is revised
+        oldRevisionTask.setRevision(revision);
         String name = getUserName();
         task.setJceName(name);
         oldTaskRepository.save(oldRevisionTask);
@@ -152,24 +159,22 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public List<AddTaskResponseDTO> addAllTasks(List<AddTaskDTO> addTaskDTOs) {
-        AddTaskDTO newTask = new AddTaskDTO();
+    public List<AddTaskResponseDTO> addAllTasks(AddTaskDTOs addTaskDTOs) {
         List<AddTaskResponseDTO> results = new ArrayList<>();
-        for (AddTaskDTO dto : addTaskDTOs) {
+        for (AddTaskDTO dto : addTaskDTOs.getTaskNumbers()) {
             AddTaskResponseDTO responseItem = new AddTaskResponseDTO();
             responseItem.setAddTaskDTO(dto);
 
-            if (existByCri(dto.getTaskNumber(), dto.getType())) {
+            if (existByCri(dto.getTaskNumber(), addTaskDTOs.getType())) {
                 responseItem.setStatus(ResponseEnum.ALREADY_EXIST);
             } else {
-                addTask(dto);
-                newTask = dto;
+                addTask(dto, addTaskDTOs.getType(), addTaskDTOs.getRevision());
                 responseItem.setStatus(ResponseEnum.ADDED);
             }
 
             results.add(responseItem);
         }
-        taskTypeService.updateRevision(newTask.getType(), newTask.getRevision());
+        taskTypeService.updateRevision(addTaskDTOs.getType(), addTaskDTOs.getRevision());
         return results;
     }
 
@@ -279,9 +284,9 @@ public class TaskServiceImpl implements TaskService {
     }
 
 
-    private TaskTypeEntity getTaskTypeEntity(AddTaskDTO addTaskDTO) {
+    private TaskTypeEntity getTaskTypeEntity(TaskTypeEnum type) {
         return taskTypeService
-                .findByType(addTaskDTO.getType());
+                .findByType(type);
     }
 
     private String  getUserName() {

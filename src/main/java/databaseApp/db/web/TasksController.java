@@ -21,16 +21,16 @@ public class TasksController {
     }
 
     @PostMapping()
-    public ResponseEntity<List<AddTaskResponseDTO>> addTasks(@Valid @RequestBody List<AddTaskDTO> addTaskDTOs) {
+    public ResponseEntity<List<AddTaskResponseDTO>> addTasks(@Valid @RequestBody AddTaskDTOs addTaskDTOs) {
 
         List<AddTaskResponseDTO> results = taskService.addAllTasks(addTaskDTOs);
         return ResponseEntity.ok(results);
     }
 
     @PostMapping("/revisions")
-    public ResponseEntity<List<ReturnTaskDTO>> addNewRevision( @Valid @RequestBody List<AddTaskDTO> addTaskDTOs) {
+    public ResponseEntity<List<ReturnTaskDTO>> addNewRevision( @Valid @RequestBody AddTaskDTOs addTaskDTOs) {
 
-        List<ReturnTaskDTO> tasks = taskService.getAllTasksByTaskType(addTaskDTOs.get(0).getType());
+        List<ReturnTaskDTO> tasks = taskService.getAllTasksByTaskType(addTaskDTOs.getType());
         taskService.addNewRevision(addTaskDTOs);
         return ResponseEntity.ok(tasks);
     }

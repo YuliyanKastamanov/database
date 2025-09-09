@@ -7,6 +7,8 @@ import TaskStatus from "./pages/TaskStatus";
 import Generator from "./pages/Generator";
 import Reports from "./pages/Reports";
 import ManageTasks from "./pages/ManageTasks";
+import ManageUsers from "./pages/ManageUsers";
+import AddTasks from "./pages/AddTasks";
 
 
 const LOGOUT_BCAST_KEY = "dbapp:logout";
@@ -146,6 +148,14 @@ function AppShell() {
             : <Navigate to="/dashboard" />
         }
       />
+      <Route
+        path="/manage-users"
+        element={
+          user && Array.isArray(user.roles) && user.roles.includes("ADMIN")
+            ? <ManageUsers user={user} onLogout={logout} />
+            : <Navigate to="/dashboard" />
+        }
+      />
 
       <Route
         path="/task-status"
@@ -161,6 +171,14 @@ function AppShell() {
         path="/reports"
         element={
           user && user.roles?.includes("ADMIN") ? <Reports user={user} /> : <Navigate to="/dashboard" />
+        }
+      />
+      <Route
+        path="/manage-tasks/add"
+        element={
+          user && (user.roles?.includes("MASTER") || user.roles?.includes("ADMIN"))
+            ? <AddTasks user={user} onLogout={logout} />
+            : <Navigate to="/dashboard" />
         }
       />
 

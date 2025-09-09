@@ -55,7 +55,8 @@ public class SecurityConfiguration {
                                 "/", "/index.html",
                                 "/static/**", "/assets/**", "/favicon.ico",
                                 "/login", "/dashboard", "/task-status", "/generator", "/reports",
-                                "/manage-users", "/manage-tasks"
+                                "/manage-users","/manage-users/**",
+                                "/manage-tasks", "/manage-users/**"
                         ).permitAll()
 
                         // Auth API

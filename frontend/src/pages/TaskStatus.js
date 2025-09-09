@@ -17,7 +17,8 @@ function TaskStatus({ user, onLogout }) {
   const [result, setResult] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasQueried, setHasQueried] = useState(false);
-  const [infoMsg, setInfoMsg] = useState(""); // <-- за съобщения в долната плочка
+  const [infoMsg, setInfoMsg] = useState(""); // съобщения в долната плочка
+  const [copyMsg, setCopyMsg] = useState(""); // toast за копиране
 
   const isAdmin = Array.isArray(user?.roles) && user.roles.includes("ADMIN");
   const displayName = user?.name || user?.uNumber || "User";
@@ -41,7 +42,6 @@ function TaskStatus({ user, onLogout }) {
       { key: "hasHistory", label: "Has History" },
       { key: "currentUpdate", label: "Current Update" },
       { key: "sbReference", label: "SB Reference" },
-      { key: "id", label: "ID" },
       { key: "exists", label: "Exists" },
     ],
     []
@@ -110,9 +110,7 @@ function TaskStatus({ user, onLogout }) {
     if (!selectedTypeObj || !selectedTypeObj.dbRevision) {
       setResult([]);
       setHasQueried(true);
-      setInfoMsg(
-        "No data available for this task type yet."
-      );
+      setInfoMsg("No data available for this task type yet.");
       setLoading(false);
       return;
     }
@@ -171,6 +169,35 @@ function TaskStatus({ user, onLogout }) {
     });
     const today = new Date().toISOString().split("T")[0];
     saveAs(blob, `task-status-${today}.xlsx`);
+  };
+
+  // NEW: Copy to Clipboard (копира видимите колони, с хедър)
+  const copyToClipboard = () => {
+    if (!Array.isArray(result) || result.length === 0) return;
+
+    const cols = allColumns.filter((c) => visibleCols[c.key]);
+    const header = cols.map((c) => c.label).join("\t");
+
+    const rows = result.map((r) =>
+      cols
+        .map((c) => {
+          let val = r?.[c.key];
+          if (c.key === "exists") val = r?.exists ? "Yes" : "No";
+          if (c.key === "lastUpdate" && r?.lastUpdate) {
+            try {
+              val = new Date(r.lastUpdate).toLocaleDateString();
+            } catch {}
+          }
+          return (val ?? "").toString().replace(/\r?\n/g, " ");
+        })
+        .join("\t")
+    );
+
+    const text = [header, ...rows].join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      setCopyMsg("✔ Results copied to clipboard");
+      setTimeout(() => setCopyMsg(""), 3000);
+    });
   };
 
   // ---- Layout / Styles ----
@@ -257,48 +284,45 @@ function TaskStatus({ user, onLogout }) {
 
   return (
     <div style={SHELL}>
-     {/* Sidebar */}
-     <aside style={SIDEBAR}>
-       <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 18 }}>Menu</div>
+      {/* Sidebar */}
+      <aside style={SIDEBAR}>
+        <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 18 }}>Menu</div>
 
-       {/* Винаги показваме Dashboard */}
-       <NavButton to="/dashboard">Dashboard</NavButton>
+        {/* Винаги показваме Dashboard */}
+        <NavButton to="/dashboard">Dashboard</NavButton>
 
-       {isAdmin ? (
-         <>
-           <NavButton to="/manage-users">Manage Users</NavButton>
-           <NavButton to="/manage-tasks">Manage Tasks</NavButton>
-           <NavButton to="/task-status">Task Status</NavButton>
-           <NavButton to="/generator">Generator</NavButton>
-           <NavButton to="/reports">Reports</NavButton>
-         </>
-       ) : (
-         <>
-           <NavButton to="/task-status">Task Status</NavButton>
-           <NavButton to="/generator">Generator</NavButton>
-         </>
-       )}
+        {isAdmin ? (
+          <>
+            <NavButton to="/manage-users">Manage Users</NavButton>
+            <NavButton to="/manage-tasks">Manage Tasks</NavButton>
+            <NavButton to="/generator">Generator</NavButton>
+            <NavButton to="/reports">Reports</NavButton>
+          </>
+        ) : (
+          <>
+            <NavButton to="/generator">Generator</NavButton>
+          </>
+        )}
 
-       <button
-         onClick={async () => {
-           await onLogout?.();
-           navigate("/login");
-         }}
-         style={{
-           marginTop: "auto",
-           background: "#0A1D3D",
-           color: "#fff",
-           border: "none",
-           borderRadius: 10,
-           padding: "10px 14px",
-           cursor: "pointer",
-           fontWeight: 700,
-         }}
-       >
-         Logout
-       </button>
-     </aside>
-
+        <button
+          onClick={async () => {
+            await onLogout?.();
+            navigate("/login");
+          }}
+          style={{
+            marginTop: "auto",
+            background: "#0A1D3D",
+            color: "#fff",
+            border: "none",
+            borderRadius: 10,
+            padding: "10px 14px",
+            cursor: "pointer",
+            fontWeight: 700,
+          }}
+        >
+          Logout
+        </button>
+      </aside>
 
       <div style={CONTENT_WRAP}>
         {/* Header */}
@@ -466,6 +490,25 @@ function TaskStatus({ user, onLogout }) {
                   Export Excel
                 </button>
 
+                {/* NEW: Copy to Clipboard */}
+                <button
+                  type="button"
+                  onClick={copyToClipboard}
+                  disabled={!Array.isArray(result) || result.length === 0}
+                  style={{
+                    background: "transparent",
+                    color: "#0A1D3D",
+                    border: "1px solid #0A1D3D",
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    cursor: Array.isArray(result) && result.length ? "pointer" : "not-allowed",
+                    fontWeight: 700,
+                    marginRight: 8,
+                  }}
+                >
+                  Copy to Clipboard
+                </button>
+
                 <ColumnsMenu
                   allColumns={allColumns}
                   visibleCols={visibleCols}
@@ -473,6 +516,13 @@ function TaskStatus({ user, onLogout }) {
                   allSelected={allSelected}
                   toggleSelectAll={toggleSelectAll}
                 />
+
+                {/* Toast съобщение до бутоните */}
+                {copyMsg && (
+                  <div style={{ marginLeft: 12, fontSize: 12, fontWeight: 700, color: "green" }}>
+                    {copyMsg}
+                  </div>
+                )}
               </div>
 
               <div
@@ -517,11 +567,12 @@ function ResultsTable({ rows, columns, tdStyle }) {
     >
       <thead
         style={{
-          background: "rgba(10,29,61,0.15)", // по-светъл нюанс за разграничение
+          background: "#DCE3EE",   // статичен фон
           position: "sticky",
           top: 0,
           zIndex: 2,
-          color: "#0A1D3D",
+          color: "#0A1D3D",        // фирменият син
+          fontWeight: 800
         }}
       >
         <tr>
@@ -533,9 +584,10 @@ function ResultsTable({ rows, columns, tdStyle }) {
                 padding: "10px 12px",
                 fontWeight: 800,
                 fontSize: 13,
-                borderBottom: "1px solid rgba(255,255,255,0.2)",
+                borderBottom: "1px solid rgba(0,0,0,0.1)",
                 whiteSpace: "nowrap",
-                background: "rgba(10,29,61,0.15)",
+                background: "#DCE3EE",
+                color: "#0A1D3D"
               }}
             >
               {col.label}

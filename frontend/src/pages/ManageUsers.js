@@ -1,13 +1,13 @@
-// src/pages/ManageTasks.js
+// src/pages/ManageUsers.js
 import { Link, useNavigate } from "react-router-dom";
 import bg from "../assets/lufthansa_aircraft.jpg";
 
-function ManageTasks({ user, onLogout }) {
+function ManageUsers({ user, onLogout }) {
   const navigate = useNavigate();
   const isAdmin = Array.isArray(user?.roles) && user.roles.includes("ADMIN");
   const displayName = user?.name || user?.uNumber || "User";
 
-  // Същите параметри на картите като в Dashboard
+  // същата карта като в Dashboard
   const cardBase = {
     background: "rgba(255,255,255,0.88)",
     borderRadius: 16,
@@ -59,7 +59,7 @@ function ManageTasks({ user, onLogout }) {
         fontFamily: "Helvetica, Arial, sans-serif",
       }}
     >
-      {/* Sidebar (същият като в Dashboard) */}
+      {/* Sidebar */}
       <aside
         style={{
           width: 240,
@@ -74,9 +74,11 @@ function ManageTasks({ user, onLogout }) {
         <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 18 }}>
           Menu
         </div>
-       {/* Винаги показваме Dashboard */}
-       <NavButton to="/dashboard">Dashboard</NavButton>
-        {/* Навигация — същата логика */}
+
+        {/* винаги Dashboard */}
+        <NavButton to="/dashboard">Dashboard</NavButton>
+
+        {/* админ меню – същото както в Dashboard */}
         {isAdmin ? (
           <>
             <NavButton to="/manage-users">Manage Users</NavButton>
@@ -84,12 +86,7 @@ function ManageTasks({ user, onLogout }) {
             <NavButton to="/generator">Generator</NavButton>
             <NavButton to="/reports">Reports</NavButton>
           </>
-        ) : (
-          <>
-            <NavButton to="/task-status">Task Status</NavButton>
-            <NavButton to="/generator">Generator</NavButton>
-          </>
-        )}
+        ) : null}
 
         <button
           onClick={async () => {
@@ -113,7 +110,7 @@ function ManageTasks({ user, onLogout }) {
 
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        {/* Header (същият като в Dashboard) */}
+        {/* Header */}
         <header
           style={{
             background: "rgba(0,0,0,0.65)",
@@ -126,9 +123,7 @@ function ManageTasks({ user, onLogout }) {
           }}
         >
           <div>
-            <div style={{ fontWeight: 800, fontSize: 22 }}>
-              Jobcard Database App
-            </div>
+            <div style={{ fontWeight: 800, fontSize: 22 }}>Manage Users</div>
             <div
               style={{
                 marginTop: 6,
@@ -141,14 +136,13 @@ function ManageTasks({ user, onLogout }) {
                 background: "rgba(255,255,255,0.18)",
               }}
             >
-              Manage Tasks
+              {isAdmin ? "Master View" : "Project View"}
             </div>
           </div>
-
           <div style={{ fontWeight: 700 }}>👤 {displayName}</div>
         </header>
 
-        {/* Cards (плочки на 1–2 реда, според ширината) */}
+        {/* Cards */}
         <main
           style={{
             flex: 1,
@@ -160,33 +154,20 @@ function ManageTasks({ user, onLogout }) {
             gap: 10,
           }}
         >
-          {/* Вече имплементирано: Task Status */}
           <Card
-            title="Task Status"
-            to="/task-status"
-            tooltip="Check the status of tasks by type / revision"
-          />
-
-          {/* Placeholder-и за останалите операции от TasksController */}
-          <Card
-            title="Add Tasks"
-            to="/manage-tasks/add"
-            tooltip="Add tasks manually or import from Excel"
+            title="Register User"
+            to="/manage-users/register"
+            tooltip="Create a new application user"
           />
           <Card
-            title="Add New Revision"
-            to="/manage-tasks/revisions"
-            tooltip="Create a new revision for a task type"
+            title="Update User Role"
+            to="/manage-users/update-role"
+            tooltip="Promote/Demote or change roles"
           />
           <Card
-            title="View Tasks"
-            to="/manage-tasks/view"
-            tooltip="Browse tasks (all or by task type)"
-          />
-          <Card
-            title="Update Tasks"
-            to="/manage-tasks/update"
-            tooltip="Bulk update fields across tasks"
+            title="Delete User"
+            to="/manage-users/delete"
+            tooltip="Remove a user from the system"
           />
         </main>
       </div>
@@ -194,7 +175,7 @@ function ManageTasks({ user, onLogout }) {
   );
 }
 
-// Навигационен бутон — идентичен с Dashboard
+// Навигационен бутон (същия стил)
 function NavButton({ to, children }) {
   return (
     <Link
@@ -226,4 +207,4 @@ function NavButton({ to, children }) {
   );
 }
 
-export default ManageTasks;
+export default ManageUsers;

@@ -14,7 +14,9 @@ public class FrontEndController {
             "/generator",
             "/reports",
             "/manage-users",
-            "/manage-tasks"
+            "/manage-users/**",   // <-- добави това
+            "/manage-tasks",
+            "/manage-tasks/**"
     })
     public String forwardToIndex() {
         return "forward:/index.html";
