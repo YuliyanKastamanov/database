@@ -1,5 +1,5 @@
 // src/pages/AddRevision.js
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
@@ -11,14 +11,18 @@ function AddRevision({ user, onLogout }) {
   // --- state ---
   const [taskTypes, setTaskTypes] = useState([]);
   const [selectedType, setSelectedType] = useState("");
-  const [currentRevision, setCurrentRevision] = useState(""); // readonly, идва от бекенда
-  const [newRevision, setNewRevision] = useState(""); // задължително от потребителя
+  const [currentRevision, setCurrentRevision] = useState(""); // readonly
+  const [newRevision, setNewRevision] = useState("");         // user input
 
   const [excelRows, setExcelRows] = useState([]);
   const [excelUploaded, setExcelUploaded] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const [successMsg, setSuccessMsg] = useState(""); // <-- показва се след успешен submit
+
+  const fileInputRef = useRef(null); // <-- за click-to-upload
 
   const isAdmin = Array.isArray(user?.roles) && user.roles.includes("ADMIN");
   const displayName = user?.name || user?.uNumber || "User";
@@ -43,22 +47,26 @@ function AddRevision({ user, onLogout }) {
     refreshTaskTypes();
   }, [refreshTaskTypes]);
 
-  // текущо избран тип
   const selectedTypeObj = useMemo(
     () => taskTypes.find((t) => t.type === selectedType),
     [taskTypes, selectedType]
   );
 
-  // когато смени тип → сетваме текущата ревизия (ако има)
+  // при смяна на type-обекта → само актуализираме текущата ревизия
   useEffect(() => {
     if (!selectedTypeObj) {
       setCurrentRevision("");
-      return;
+    } else {
+      setCurrentRevision(selectedTypeObj.dbRevision ?? "");
     }
-    setCurrentRevision(selectedTypeObj.dbRevision ?? "");
   }, [selectedTypeObj]);
 
-  // колони за вход (както при AddTasks — свободни полета, но за ревизията ползваме newRevision)
+  // при смяна на избрания тип (реална промяна в select) → чистим successMsg
+  useEffect(() => {
+    setSuccessMsg("");
+  }, [selectedType]);
+
+  // колони за вход
   const inputColumns = useMemo(
     () => [
       { key: "taskNumber", label: "Task Number" },
@@ -96,6 +104,7 @@ function AddRevision({ user, onLogout }) {
         setExcelRows(normalized);
         setExcelUploaded(true);
         setUploadedFileName(file.name);
+        setSuccessMsg(""); // <-- качваме нов файл → скриваме старото success съобщение
       } catch (err) {
         console.error(err);
         setExcelRows([]);
@@ -130,6 +139,7 @@ function AddRevision({ user, onLogout }) {
     if (file) parseExcelFile(file);
   };
 
+  // template download
   const downloadTemplate = () => {
     const headers = inputColumns.map((c) => c.label);
     const ws = XLSX.utils.aoa_to_sheet([headers]);
@@ -157,7 +167,7 @@ function AddRevision({ user, onLogout }) {
       return;
     }
 
-    // взимаме редовете само от Excel; филтрираме празни taskNumber
+    // само редове от Excel; филтрираме празни taskNumber
     const cleanRows = excelRows
       .map((r) => ({
         taskNumber: (r.taskNumber || "").trim(),
@@ -180,7 +190,7 @@ function AddRevision({ user, onLogout }) {
     const payload = {
       taskNumbers: cleanRows,
       type: selectedType,
-      revision: String(newRevision.trim()), // новата ревизия
+      revision: String(newRevision.trim()),
     };
 
     try {
@@ -197,9 +207,9 @@ function AddRevision({ user, onLogout }) {
         throw new Error(txt || "Failed to submit");
       }
 
-      // бекенд връща List<ReturnTaskDTO> → директно генерираме и сваляме Excel
       const data = await res.json();
 
+      // Генерираме и сваляме Excel (както преди)
       const worksheetData = (Array.isArray(data) ? data : []).map((r) => ({
         "Task Number": r.taskNumber ?? "",
         Revision: r.revision ?? "",
@@ -232,11 +242,20 @@ function AddRevision({ user, onLogout }) {
       const today = new Date().toISOString().split("T")[0];
       saveAs(blob, `tasks-before-revision-${selectedType}-${today}.xlsx`);
 
-      // почистване + рефреш на типовете за да се види новата ревизия
+      // Успех → показваме съобщение, чистим полето за нова ревизия
+      setSuccessMsg(
+        `New revision "${newRevision.trim()}" for task type "${selectedType}" was added successfully.`
+      );
+      setNewRevision("");
+
+      // чистим файла/таблицата
       setExcelRows([]);
       setExcelUploaded(false);
       setUploadedFileName("");
+
+      // рефреш на типовете (за да вземем новата currentRevision)
       await refreshTaskTypes();
+
     } catch (err) {
       console.error(err);
       alert("Submission failed. Please check your input and try again.");
@@ -245,7 +264,7 @@ function AddRevision({ user, onLogout }) {
     }
   };
 
-  // ---- стилистика (същите базови като AddTasks/TaskStatus) ----
+  // ---- стилистика ----
   const SHELL = {
     display: "flex",
     minHeight: "100vh",
@@ -284,7 +303,6 @@ function AddRevision({ user, onLogout }) {
   };
 
   const cardWidth = "min(1400px, 96vw)";
-  // ако има качен ексел → картата запълва височината
   const CARD = {
     background: "rgba(255,255,255,0.88)",
     borderRadius: 16,
@@ -389,6 +407,23 @@ function AddRevision({ user, onLogout }) {
           <div style={CARD}>
             <h2 style={{ margin: 0, marginBottom: 10 }}>Add New Revision</h2>
 
+            {/* Success message (остава докато не смениш тип или не качиш нов файл) */}
+            {successMsg && (
+              <div
+                style={{
+                  marginBottom: 10,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "#E6F4EA",
+                  color: "#0B6B3A",
+                  fontWeight: 700,
+                  border: "1px solid rgba(11,107,58,0.25)",
+                }}
+              >
+                {successMsg}
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               {/* Row: Task Type, Current Revision (readonly), New Revision */}
               <div style={{ display: "flex", gap: 16, marginBottom: 12, flexWrap: "wrap" }}>
@@ -399,6 +434,8 @@ function AddRevision({ user, onLogout }) {
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
                     required
+                    // ако искаш да чисти съобщението дори при клик без смяна — махни коментара:
+                    // onMouseDown={() => setSuccessMsg("")}
                   >
                     <option value="">-- Select --</option>
                     {taskTypes.map((t) => (
@@ -419,14 +456,17 @@ function AddRevision({ user, onLogout }) {
                   <input
                     style={INPUT}
                     value={newRevision}
-                    onChange={(e) => setNewRevision(e.target.value)}
+                    onChange={(e) => {
+                      setNewRevision(e.target.value);
+                      setSuccessMsg(""); // променяш ревизията → скрий старото съобщение
+                    }}
                     required
                     placeholder="Enter new revision (e.g., R02)"
                   />
                 </div>
               </div>
 
-              {/* Controls: Template + Dropzone */}
+              {/* Controls: Template + Dropzone (click + drag&drop) */}
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10, flexWrap: "wrap" }}>
                 <button
                   type="button"
@@ -444,21 +484,28 @@ function AddRevision({ user, onLogout }) {
                   Download Excel Template
                 </button>
 
-                <label
+                <div
                   style={DROPZONE}
+                  onClick={() => fileInputRef.current?.click()}
                   onDragOver={onDragOver}
                   onDragLeave={onDragLeave}
                   onDrop={onDrop}
                   title="Drop an Excel file here or click to choose"
                 >
-                  <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} style={{ display: "none" }} />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileUpload}
+                    style={{ display: "none" }}
+                  />
                   <span style={{ fontWeight: 700 }}>
                     {excelUploaded ? "File selected:" : "Drop / Click to upload Excel"}
                   </span>
                   <span style={{ opacity: 0.8 }}>
                     {excelUploaded ? uploadedFileName : "(XLSX / XLS)"}
                   </span>
-                </label>
+                </div>
 
                 {excelUploaded && <span style={{ fontWeight: 700, color: "green" }}>Excel uploaded ✔</span>}
 
@@ -582,6 +629,14 @@ function NavButton({ to, children }) {
         fontWeight: 700,
         display: "block",
         transition: "background 140ms ease, border-color 140ms ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.borderColor = "rgba(255,255,255,0.25)";
       }}
     >
       {children}
