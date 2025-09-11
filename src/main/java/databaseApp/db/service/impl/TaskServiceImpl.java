@@ -29,6 +29,7 @@ public class TaskServiceImpl implements TaskService {
     private static final String NOT_EXISTING = "Not Existing";
     private static final String SOC_STATUS_D = "D";
     private static final String TASK_STATUS_OK = "OK";
+    private static final String TASK_STATUS_UPDATED = "Updated";
     private static final String A340_300 = "/300";
     private static final String A340_600 = "/600";
     private static final String SVA330 = "/330";
@@ -152,10 +153,10 @@ public class TaskServiceImpl implements TaskService {
         task.setJceName(name);
         oldTaskRepository.save(oldRevisionTask);
 
-        // Проверка за брой стари ревизии за същия task (cri)
+        // Find all tasks with the same CRI in the different revisions ordered by LastUpdateAsc.
         List<OldTasksEntity> oldRevisions = oldTaskRepository.findByCriOrderByLastUpdateAsc(task.getCri());
 
-        // Ако имаме повече от 3 ревизии, изтриваме най-старите
+        // If more than 3 tasks found, remove the oldest one on index 0
         if (oldRevisions.size() > MAX_OLD_REVISIONS) {
             oldTaskRepository.delete(oldRevisions.get(0));
         }
@@ -193,12 +194,12 @@ public class TaskServiceImpl implements TaskService {
             TaskEntity currentTask = null;
             OldTasksEntity oldTask = null;
 
-            // Опитай първо да намериш стар таск, ако е проверка за стара ревизия
+            // find old task based on the provided revision
             if (!currentDbRev.equals(checkTaskStatusDTO.getRevision())) {
                 oldTask = oldTaskRepository.findByCriAndRevision(cri, checkTaskStatusDTO.getRevision()).orElse(null);
             }
 
-            // Ако не е намерен стар таск, Или работим с най-нова ревизия, потърси текущата ревизия
+            // if no old task found or new revision is required find the task in the current DB
             if (oldTask == null) {
                 currentTask = taskRepository.findByCri(cri).orElse(null);
             }
@@ -252,6 +253,12 @@ public class TaskServiceImpl implements TaskService {
         for (UpdateTaskDTO task : updateTaskDTOS){
             TaskEntity updatedTask = updateTask(task);
             ReturnTaskDTO taskToReturn = modelMapper.map(updatedTask, ReturnTaskDTO.class);
+            if(updatedTask == null){
+                taskToReturn.setStatusInfo(NOT_EXISTING);
+                taskToReturn.setExists(false);
+            }else {
+                taskToReturn.setStatusInfo(TASK_STATUS_UPDATED);
+            }
             allTasksToReturn.add(taskToReturn);
         }
 
