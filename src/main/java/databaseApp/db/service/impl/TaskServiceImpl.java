@@ -252,11 +252,13 @@ public class TaskServiceImpl implements TaskService {
         List<ReturnTaskDTO> allTasksToReturn = new ArrayList<>();
         for (UpdateTaskDTO task : updateTaskDTOS){
             TaskEntity updatedTask = updateTask(task);
-            ReturnTaskDTO taskToReturn = modelMapper.map(updatedTask, ReturnTaskDTO.class);
+            ReturnTaskDTO taskToReturn;
             if(updatedTask == null){
+                taskToReturn = modelMapper.map(task, ReturnTaskDTO.class);
                 taskToReturn.setStatusInfo(NOT_EXISTING);
                 taskToReturn.setExists(false);
             }else {
+                taskToReturn = modelMapper.map(updatedTask, ReturnTaskDTO.class);
                 taskToReturn.setStatusInfo(TASK_STATUS_UPDATED);
             }
             allTasksToReturn.add(taskToReturn);
