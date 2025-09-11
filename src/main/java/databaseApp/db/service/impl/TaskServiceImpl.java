@@ -131,8 +131,12 @@ public class TaskServiceImpl implements TaskService {
         task.setRevision(revision);
         String name = getUserName();
         task.setJceName(name);
-        task.setStatusMJob("-");
-        task.setCoversheetStatus("-");
+        if(task.getStatusMJob().isEmpty() || task.getStatusMJob()==null){
+            task.setStatusMJob("-");
+        }
+        if(task.getCoversheetStatus().isEmpty() || task.getCoversheetStatus()==null){
+            task.setCoversheetStatus("-");
+        }
         taskRepository.save(task);
 
     }
@@ -213,12 +217,23 @@ public class TaskServiceImpl implements TaskService {
                     statusList.add(NOT_OK);
                 }
 
+                //providing only tasks which are not ok
                 if (!statusList.isEmpty()) {
                     ReturnTaskDTO dto = modelMapper.map(taskToCheck, ReturnTaskDTO.class);
                     dto.setExists(true);
                     dto.setStatusInfo(String.join(", ", statusList));
                     result.add(dto);
                 }
+
+                //providing all tasks
+                /*ReturnTaskDTO dto = modelMapper.map(taskToCheck, ReturnTaskDTO.class);
+                if (statusList.isEmpty()) {
+                    statusList.add("Task Ok!");
+                }
+                dto.setStatusInfo(String.join(", ", statusList));
+                dto.setExists(true);
+                result.add(dto);*/
+
             } else {
                 ReturnTaskDTO dto = new ReturnTaskDTO();
                 dto.setTaskNumber(taskNumber);
