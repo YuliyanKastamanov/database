@@ -132,10 +132,10 @@ public class TaskServiceImpl implements TaskService {
         task.setRevision(revision);
         String name = getUserName();
         task.setJceName(name);
-        if(!task.getStatusMJob().isEmpty() || task.getStatusMJob() != null){
+        if(task.getStatusMJob() != null /*|| !task.getStatusMJob().isEmpty()*/ ){
             task.setStatusMJob("-");
         }
-        if(!task.getCoversheetStatus().isEmpty() || task.getCoversheetStatus() != null){
+        if(task.getCoversheetStatus()!=null /*|| !task.getCoversheetStatus().isEmpty()*/){
             task.setCoversheetStatus("-");
         }
         taskRepository.save(task);
@@ -252,15 +252,7 @@ public class TaskServiceImpl implements TaskService {
         List<ReturnTaskDTO> allTasksToReturn = new ArrayList<>();
         for (UpdateTaskDTO task : updateTaskDTOS){
             TaskEntity updatedTask = updateTask(task);
-            ReturnTaskDTO taskToReturn;
-            if(updatedTask == null){
-                taskToReturn = modelMapper.map(task, ReturnTaskDTO.class);
-                taskToReturn.setStatusInfo(NOT_EXISTING);
-                taskToReturn.setExists(false);
-            }else {
-                taskToReturn = modelMapper.map(updatedTask, ReturnTaskDTO.class);
-                taskToReturn.setStatusInfo(TASK_STATUS_UPDATED);
-            }
+            ReturnTaskDTO taskToReturn = modelMapper.map(updatedTask, ReturnTaskDTO.class);
             allTasksToReturn.add(taskToReturn);
         }
 

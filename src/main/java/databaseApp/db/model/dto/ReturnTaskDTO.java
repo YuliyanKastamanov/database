@@ -2,6 +2,7 @@ package databaseApp.db.model.dto;
 
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ReturnTaskDTO {
     private String taskNumber;
@@ -15,7 +16,7 @@ public class ReturnTaskDTO {
     private String createdMJob;
     private String statusMJob;
     private String cri;
-    private LocalDate lastUpdate;
+    private LocalDateTime lastUpdate;
     private String hasHistory;
     private String currentUpdate;
     private String sbReference;
@@ -127,11 +128,11 @@ public class ReturnTaskDTO {
         this.cri = cri;
     }
 
-    public LocalDate getLastUpdate() {
+    public LocalDateTime getLastUpdate() {
         return lastUpdate;
     }
 
-    public void setLastUpdate(LocalDate lastUpdate) {
+    public void setLastUpdate(LocalDateTime lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
 

@@ -29,7 +29,6 @@ public class TasksController {
 
     @PostMapping("/revisions")
     public ResponseEntity<List<ReturnTaskDTO>> addNewRevision( @Valid @RequestBody AddTaskDTOs addTaskDTOs) {
-
         List<ReturnTaskDTO> tasks = taskService.getAllTasksByTaskType(addTaskDTOs.getType());
         taskService.addNewRevision(addTaskDTOs);
         return ResponseEntity.ok(tasks);
