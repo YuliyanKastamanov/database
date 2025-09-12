@@ -440,7 +440,11 @@ function AddRevision({ user, onLogout }) {
                 <div style={{ flex: "1 1 220px", minWidth: 200 }}>
                   <div style={LABEL}>New Revision</div>
                   <input
-                    style={INPUT}
+                    style={{
+                      ...INPUT,
+                      backgroundColor: currentRevision ? "#fff" : "#f0f0f0", // визуална подсказка
+                      cursor: currentRevision ? "text" : "not-allowed",
+                    }}
                     value={newRevision}
                     onChange={(e) => {
                       setNewRevision(e.target.value);
@@ -448,6 +452,7 @@ function AddRevision({ user, onLogout }) {
                     }}
                     required
                     placeholder="Enter new revision (e.g., R02)"
+                    disabled={!currentRevision} // 🔑 активира се само ако има currentRevision
                   />
                 </div>
               </div>

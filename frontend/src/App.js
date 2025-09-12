@@ -10,6 +10,7 @@ import ManageTasks from "./pages/ManageTasks";
 import ManageUsers from "./pages/ManageUsers";
 import AddTasks from "./pages/AddTasks";
 import AddRevision from "./pages/AddRevision";
+import ViewTasks from "./pages/ViewTasks";
 
 
 const LOGOUT_BCAST_KEY = "dbapp:logout";
@@ -191,7 +192,12 @@ function AppShell() {
             : <Navigate to="/dashboard" />
         }
       />
-
+      <Route
+        path="/manage-tasks/view"
+        element={user && user.roles?.includes("ADMIN")
+          ? <ViewTasks user={user} onLogout={logout} />
+          : <Navigate to="/dashboard" />}
+      />
 
       <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
     </Routes>

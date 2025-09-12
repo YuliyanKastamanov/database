@@ -65,7 +65,13 @@ function AddTasks({ user, onLogout }) {
       setAvailableRevision(null);
       setRevision("");
     }
+    // ВАЖНО: Тук НЕ зануляваме hasQueried, за да не изчезва долната плочка след submit.
   }, [selectedTypeObj]);
+
+  // Скрий резултатите при СМЯНА на типа
+  useEffect(() => {
+    setHasQueried(false);
+  }, [selectedType]);
 
   // Колони за вход (Excel) и изход (резултати)
   const inputColumns = useMemo(
@@ -120,8 +126,9 @@ function AddTasks({ user, onLogout }) {
         });
 
         setExcelRows(normalized);
-        setExcelUploaded(true);
+        setExcelUploaded(true);                 // <<< ще разшири горната карта
         setUploadedFileName(file.name);
+        setHasQueried(false);                   // скрий долната карта при нов файл
       } catch (err) {
         console.error(err);
         setExcelRows([]);
@@ -137,6 +144,8 @@ function AddTasks({ user, onLogout }) {
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) parseExcelFile(file);
+    // Позволи повторен upload на СЪЩИЯ файл
+    e.target.value = "";
   };
 
   // Drag & drop
@@ -224,16 +233,15 @@ function AddTasks({ user, onLogout }) {
 
       const data = await res.json();
       setResult(Array.isArray(data) ? data : []);
-      setHasQueried(true);
+      setHasQueried(true);      // покажи долната плочка
 
-      // Изчистваме входа след успех
+      // Изчистваме входа след успех => горната плочка се свива обратно
       setExcelRows([]);
-      setExcelUploaded(false);
+      setExcelUploaded(false);  // <<< ще върне височината на половин екран
       setUploadedFileName("");
 
-      // Рефрешваме типовете, за да вземем динамично актуална ревизия
+      // Рефрешваме типовете (за динамична ревизия)
       await refreshTaskTypes();
-      // selectedTypeObj ще се преизчисли от useMemo; useEffect по-горе ще сетне revision/availableRevision
     } catch (err) {
       console.error(err);
     }
@@ -306,8 +314,12 @@ function AddTasks({ user, onLogout }) {
     gap: 8,
     overflow: "hidden",
   };
+
   const cardWidth = "min(1400px, 96vw)";
-  const cardHeight = "calc((99vh - 80px - 24px) / 2)";
+  // >>> променяме височината според excelUploaded (разширяване/свиване)
+  const cardHeight = excelUploaded
+    ? "calc(99vh - 80px - 24px)"                 // максимално (като при AddRevision)
+    : "calc((99vh - 80px - 24px) / 2)";          // половин екран (по подразб.)
   const CARD = {
     background: "rgba(255,255,255,0.88)",
     borderRadius: 16,
@@ -491,9 +503,7 @@ function AddTasks({ user, onLogout }) {
                   <span style={{ fontWeight: 700 }}>
                     {excelUploaded ? "File selected:" : "Drop / Click to upload Excel"}
                   </span>
-                  <span style={{ opacity: 0.8 }}>
-                    {excelUploaded ? uploadedFileName : "(XLSX / XLS)"}
-                  </span>
+                  <span style={{ opacity: 0.8 }}>{excelUploaded ? uploadedFileName : "(XLSX / XLS)"}</span>
                 </label>
 
                 {excelUploaded && <span style={{ fontWeight: 700, color: "green" }}>Excel uploaded ✔</span>}
