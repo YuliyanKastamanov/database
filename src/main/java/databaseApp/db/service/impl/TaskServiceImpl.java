@@ -132,10 +132,10 @@ public class TaskServiceImpl implements TaskService {
         task.setRevision(revision);
         String name = getUserName();
         task.setJceName(name);
-        if(task.getStatusMJob().isEmpty() || task.getStatusMJob()==null){
+        if(!task.getStatusMJob().isEmpty() || task.getStatusMJob() != null){
             task.setStatusMJob("-");
         }
-        if(task.getCoversheetStatus().isEmpty() || task.getCoversheetStatus()==null){
+        if(!task.getCoversheetStatus().isEmpty() || task.getCoversheetStatus() != null){
             task.setCoversheetStatus("-");
         }
         taskRepository.save(task);
