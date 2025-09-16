@@ -29,7 +29,7 @@ public class TaskServiceImpl implements TaskService {
     private static final String NOT_EXISTING = "Not Existing";
     private static final String SOC_STATUS_D = "D";
     private static final String TASK_STATUS_OK = "OK";
-    private static final String TASK_STATUS_UPDATED = "Updated";
+    private static final String TASK_UPDATED = "Updated";
     private static final String A340_300 = "/300";
     private static final String A340_600 = "/600";
     private static final String SVA330 = "/330";
@@ -252,7 +252,15 @@ public class TaskServiceImpl implements TaskService {
         List<ReturnTaskDTO> allTasksToReturn = new ArrayList<>();
         for (UpdateTaskDTO task : updateTaskDTOS){
             TaskEntity updatedTask = updateTask(task);
-            ReturnTaskDTO taskToReturn = modelMapper.map(updatedTask, ReturnTaskDTO.class);
+            ReturnTaskDTO taskToReturn;
+            if(updatedTask == null){
+                taskToReturn = modelMapper.map(task, ReturnTaskDTO.class);
+                taskToReturn.setExists(false);
+                taskToReturn.setStatusInfo(NOT_EXISTING);
+            }else {
+                taskToReturn = modelMapper.map(updatedTask, ReturnTaskDTO.class);
+                taskToReturn.setStatusInfo(TASK_UPDATED);
+            }
             allTasksToReturn.add(taskToReturn);
         }
 

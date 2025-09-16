@@ -2,6 +2,7 @@ package databaseApp.db.model.dto;
 
 import databaseApp.db.model.entity.enums.TaskTypeEnum;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 
@@ -23,7 +24,7 @@ public class UpdateTaskDTO {
     @NotBlank
     private String statusMJob;
     private String sbReference;
-    @NotBlank
+    @NotNull
     private TaskTypeEnum type;
 
     public UpdateTaskDTO() {
