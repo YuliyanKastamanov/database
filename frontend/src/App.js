@@ -11,7 +11,7 @@ import ManageUsers from "./pages/ManageUsers";
 import AddTasks from "./pages/AddTasks";
 import AddRevision from "./pages/AddRevision";
 import ViewTasks from "./pages/ViewTasks";
-
+import UpdateTasks from "./pages/UpdateTasks";
 
 const LOGOUT_BCAST_KEY = "dbapp:logout";
 const IDLE_MS = 20 * 60 * 1000; // 20m
@@ -198,6 +198,12 @@ function AppShell() {
           ? <ViewTasks user={user} onLogout={logout} />
           : <Navigate to="/dashboard" />}
       />
+      <Route
+              path="/manage-tasks/update"
+              element={user && user.roles?.includes("ADMIN")
+                ? <UpdateTasks user={user} onLogout={logout} />
+                : <Navigate to="/dashboard" />}
+            />
 
       <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
     </Routes>
